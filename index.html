@@ -534,6 +534,7 @@ class Component extends DCLogic {
     body: [{id:'dubbing_syn',de:'Dubbing (synth.)',en:'Dubbing (synthetic)'},{id:'dubbing_nat',de:'Naturdubbing (Hase)',en:'Natural dubbing (hare)'},{id:'peacock',de:'Pfauengras',en:'Peacock herl'},{id:'chenille',de:'Chenille',en:'Chenille'},{id:'floss',de:'Floss',en:'Floss'},{id:'tinsel',de:'Tinsel',en:'Tinsel'},{id:'pheasant',de:'Fasanenfasern',en:'Pheasant fibers'}],
     rib: [{id:'copperw',de:'Kupferdraht',en:'Copper wire'},{id:'goldt',de:'Goldtinsel',en:'Gold tinsel'},{id:'silverw',de:'Silberdraht',en:'Silver wire'},{id:'floss',de:'Floss',en:'Floss'},{id:'mono',de:'Monofil',en:'Mono'}],
     thorax: [{id:'peacock',de:'Pfauengras',en:'Peacock herl'},{id:'dubbing_nat',de:'Naturdubbing (Hase)',en:'Natural dubbing (hare)'},{id:'dubbing_syn',de:'Dubbing (synth.)',en:'Dubbing (synthetic)'}],
+    leg: [{id:'rubber',de:'Gummi-Beine',en:'Rubber legs'},{id:'silicon',de:'Silicon-Beine',en:'Silicon legs'},{id:'knotted',de:'Fasanenbeine (geknotet)',en:'Knotted pheasant legs'},{id:'hacklefib',de:'Hechelborsten',en:'Hackle fiber legs'}],
     hackle: [{id:'rooster',de:'Hahnenhechel (Premium)',en:'Rooster hackle (premium)'},{id:'hen',de:'Hennenhechel (weich)',en:'Hen hackle (soft)'},{id:'cdc',de:'CDC',en:'CDC'},{id:'synthetic',de:'Synthetisch',en:'Synthetic'}],
     wing: [{id:'elk',de:'Rehhaar (Elk)',en:'Elk hair'},{id:'cdc',de:'CDC',en:'CDC'},{id:'hackletip',de:'Hechelspitzen / Biots',en:'Hackle tips / biots'},{id:'bucktail',de:'Bucktail',en:'Bucktail'},{id:'calftail',de:'Kälberhaar',en:'Calf tail'},{id:'krystal',de:'Krystal Flash',en:'Krystal Flash'}],
     head: [{id:'thread',de:'Fadenkopf',en:'Thread head'},{id:'dubbing',de:'Dubbingkopf',en:'Dubbing head'}],
@@ -548,6 +549,7 @@ class Component extends DCLogic {
     body:{de:'Körper',en:'Body',hasColor:true},
     rib:{de:'Rippung',en:'Rib',optional:true,hasColor:true},
     thorax:{de:'Brustkorb',en:'Thorax',optional:true,hasColor:true},
+    leg:{de:'Beine',en:'Legs',optional:true,hasColor:true},
     hackle:{de:'Hechel',en:'Hackle',optional:true,hasColor:true,hasStyle:true,hasLength:true,hasSweep:true},
     wing:{de:'Flügel',en:'Wing',optional:true,hasColor:true,hasStyle:true},
     head:{de:'Kopf',en:'Head',optional:true,hasColor:true},
@@ -687,7 +689,7 @@ class Component extends DCLogic {
   ];
 
   // ---------- compact pattern expansion ----------
-  SLOT_ORDER = ['bead','hook','thread','weight','tail','body','rib','thorax','hackle','wing','head'];
+  SLOT_ORDER = ['bead','hook','thread','weight','tail','body','rib','thorax','leg','hackle','wing','head'];
   STEP_PHRASE = {
     bead:{de:'Perle aufziehen',en:'slide on the bead'},
     hook:{de:'Haken einspannen',en:'mount the hook'},
@@ -775,9 +777,9 @@ class Component extends DCLogic {
     {id:'wd40',type:'nymph',diff:2,name:'WD-40',tagline:{de:'Schlanke Midge-Emerger-Nymphe.',en:'A slim midge emerger nymph.'},parts:{hook:['scud',18],thread:['8/0','gray'],tail:['hacklefib','brown'],body:['floss','gray'],thorax:['dubbing_syn','gray'],head:['thread','gray']}},
     {id:'rs2',type:'nymph',diff:2,name:'RS2',tagline:{de:'Vielseitiger Emerger im kleinen Format.',en:'A versatile small-format emerger.'},parts:{hook:['dry',20],thread:['8/0','gray'],tail:['hacklefib','gray'],body:['dubbing_syn','gray'],thorax:['dubbing_syn','gray'],head:['thread','gray']}},
     {id:'brassie',type:'nymph',diff:1,name:'Brassie',tagline:{de:'Simple Kupferdraht-Midge.',en:'A simple copper-wire midge.'},parts:{bead:['tungsten','gold'],hook:['scud',18],thread:['8/0','black'],body:['tinsel','copper'],thorax:['peacock','peacock'],head:['thread','black']}},
-    {id:'rubberlegs',type:'nymph',diff:1,name:"Pat's Rubber Legs",tagline:{de:'Gummibein-Steinfliege, kinderleicht.',en:'A rubber-leg stonefly, dead easy.'},parts:{hook:['nymph',8],thread:['8/0','brown'],weight:['leadfree','med'],body:['chenille','brown'],head:['thread','brown']}},
-    {id:'kaufmannstone',type:'nymph',diff:3,name:"Kaufmann's Stonefly",tagline:{de:'Große, schwere Steinfliegen-Nymphe.',en:'A big, heavy stonefly nymph.'},parts:{bead:['brass','black'],hook:['streamer',6],thread:['140d','black'],weight:['lead','heavy'],tail:['hacklefib','brown'],body:['dubbing_syn','black'],rib:['copperw','copper'],thorax:['dubbing_syn','black'],hackle:['hen','brown','collar'],head:['thread','black']}},
-    {id:'goldenstone',type:'nymph',diff:3,name:'Golden Stonefly Nymph',tagline:{de:'Goldbraune Steinfliege fürs Frühjahr.',en:'A golden-brown spring stonefly.'},parts:{bead:['brass','gold'],hook:['streamer',8],thread:['8/0','tan'],weight:['lead','med'],tail:['hacklefib','tan'],body:['dubbing_syn','tan'],rib:['copperw','copper'],thorax:['dubbing_syn','brown'],head:['thread','tan']}},
+    {id:'rubberlegs',type:'nymph',diff:1,name:"Pat's Rubber Legs",tagline:{de:'Gummibein-Steinfliege, kinderleicht.',en:'A rubber-leg stonefly, dead easy.'},parts:{hook:['nymph',8],thread:['8/0','brown'],weight:['leadfree','med'],body:['chenille','brown'],leg:['rubber','brown'],head:['thread','brown']}},
+    {id:'kaufmannstone',type:'nymph',diff:3,name:"Kaufmann's Stonefly",tagline:{de:'Große, schwere Steinfliegen-Nymphe.',en:'A big, heavy stonefly nymph.'},parts:{bead:['brass','black'],hook:['streamer',6],thread:['140d','black'],weight:['lead','heavy'],tail:['hacklefib','brown'],body:['dubbing_syn','black'],rib:['copperw','copper'],thorax:['dubbing_syn','black'],leg:['rubber','black'],hackle:['hen','brown','collar'],head:['thread','black']}},
+    {id:'goldenstone',type:'nymph',diff:3,name:'Golden Stonefly Nymph',tagline:{de:'Goldbraune Steinfliege fürs Frühjahr.',en:'A golden-brown spring stonefly.'},parts:{bead:['brass','gold'],hook:['streamer',8],thread:['8/0','tan'],weight:['lead','med'],tail:['hacklefib','tan'],body:['dubbing_syn','tan'],rib:['copperw','copper'],thorax:['dubbing_syn','brown'],leg:['silicon','tan'],head:['thread','tan']}},
     {id:'flashhares',type:'nymph',diff:1,name:"Flashback Hare's Ear",tagline:{de:"Hasenohr mit Glanzrücken.",en:"A hare's ear with a flash back."},parts:{bead:['brass','gold'],hook:['nymph',14],thread:['8/0','brown'],tail:['hacklefib','brown'],body:['dubbing_nat','brown'],rib:['goldt','gold'],thorax:['dubbing_nat','brown'],head:['thread','brown']}},
     {id:'scud',type:'nymph',diff:1,name:'Scud',tagline:{de:'Bachflohkrebs für stehende Gewässer.',en:'A freshwater shrimp for stillwaters.'},parts:{hook:['scud',14],thread:['8/0','olive'],weight:['leadfree','light'],body:['dubbing_syn','olive'],rib:['silverw','silver'],head:['thread','olive']}},
     {id:'sowbug',type:'nymph',diff:1,name:'Sowbug',tagline:{de:'Graue Wasserassel-Imitation.',en:'A grey aquatic-sowbug imitation.'},parts:{hook:['scud',16],thread:['8/0','gray'],body:['dubbing_syn','gray'],rib:['silverw','silver'],head:['thread','gray']}},
@@ -1814,6 +1816,9 @@ class Component extends DCLogic {
       for(let kk=0;kk<44;kk++){ const ang=kk/44*Math.PI*2 + (kk%3); const ex=tx+Math.cos(ang)*(rx+2+(kk%5)*1.5), ey=tcy+Math.sin(ang)*(ry+2+(kk%5)*1.3); const sx2=tx+Math.cos(ang)*rx*0.78, sy2=tcy+Math.sin(ang)*ry*0.78; E('line',{x1:sx2.toFixed(1),y1:sy2.toFixed(1),x2:ex.toFixed(1),y2:ey.toFixed(1),stroke:tc,strokeWidth:1.4,strokeLinecap:'round',opacity:.68}); }
       E('ellipse',{cx:tx,cy:tcy,rx:rx,ry:ry,fill:tc});
       for(let kk=0;kk<16;kk++){ const a2=kk*0.618*Math.PI*2; const r2=(kk%6)/6; E('circle',{cx:(tx+Math.cos(a2)*rx*r2).toFixed(1),cy:(tcy+Math.sin(a2)*ry*r2).toFixed(1),r:1+(kk%2),fill:(kk%2?'rgba(255,255,255,.26)':'rgba(0,0,0,.2)')}); } }
+
+    // legs
+    const legS=get('leg'); if(legS&&on(legS)){ const lc=hex(legS.color); const isRubber=['rubber','silicon'].includes(legS.material); const pts=[x0+12,x0+22,x0+32]; pts.forEach((lx,i)=>{ const cy=cyAt(lx); const bodyA=body?ampFor(body.material):11; const rmid=(x0+x1)/2,rhalf=(x1-x0)/2; const u=(lx-rmid)/rhalf; const bh=bodyA*Math.sqrt(Math.max(0,1-u*u)); const sy0=cy+bh; [[-15,22],[15,22]].forEach(([dx,dy])=>{ const ex=lx+dx,ey=sy0+dy; if(isRubber){ const mx=lx+dx*0.5+((i%2?1:-1)*2),my=sy0+dy*0.5; E('path',{d:`M${lx},${sy0.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${ex},${ey}`,fill:'none',stroke:lc,strokeWidth:1.8,strokeLinecap:'round',opacity:.88}); } else { E('line',{x1:lx,y1:sy0.toFixed(1),x2:ex,y2:ey,stroke:lc,strokeWidth:1.5,strokeLinecap:'round',opacity:.84}); } }); }); }
 
     // wing
     const wing=get('wing');
