@@ -369,14 +369,14 @@
 
   <!-- ============ WIKI ============ -->
   <sc-if value="{{ isWiki }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1280px;margin:0 auto;padding:{{ padOv }};display:flex;gap:0;align-items:flex-start">
+    <div style="{{ wikiOuterStyle }}">
       <!-- sidebar -->
-      <div style="width:220px;flex-shrink:0;position:sticky;top:72px;max-height:calc(100vh - 90px);overflow-y:auto;padding-right:12px;padding-bottom:24px">
+      <div style="{{ wikiSidebarStyle }}">
         <div style="font-family:'IBM Plex Mono';font-size:10px;color:#2fd3ac;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px;padding-left:6px">{{ t.navWiki }}</div>
         <sc-for list="{{ wikiTree }}" as="cat" hint-placeholder-count="4">
           <div style="margin-bottom:4px">
             <button onClick="{{ toggleWikiSection }}" data-id="{{ cat.id }}" style="{{ cat.catStyle }}">
-              <span style="font-size:10px;opacity:.7">{{ cat.open }}</span>
+              <span style="font-size:10px;opacity:.7">{{ cat.openArrow }}</span>
               {{ cat.label }}
             </button>
             <sc-if value="{{ cat.open }}" hint-placeholder-val="{{ true }}">
@@ -393,7 +393,7 @@
         </sc-for>
       </div>
       <!-- article -->
-      <div style="flex:1;min-width:0;padding-left:32px;border-left:1px solid #1d2228">
+      <div style="{{ wikiArticleStyle }}">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <span style="font-family:'IBM Plex Mono';font-size:11px;color:#4a5058">{{ wikiNodeNum }}</span>
           <h1 style="font-size:28px;font-weight:700;margin:0;letter-spacing:-.02em">{{ wikiNodeTitle }}</h1>
@@ -500,7 +500,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;de&quot;,&quot;en&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'de'|'en'&quot;},&quot;defaultFilter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;dry&quot;,&quot;nymph&quot;,&quot;streamer&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showTyingSteps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizScore: {r:0,w:0}, quizAnswered: false };
+  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false,technik:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizScore: {r:0,w:0}, quizAnswered: false };
 
   // ---------- static data ----------
   SIZES = [4,6,8,10,12,14,16,18,20,22];
@@ -898,6 +898,23 @@ class Component extends DCLogic {
           {term:{de:'Trocken',en:'Dry'}, text:{de:'Griffith\'s Gnat, Shipman\'s Buzzer, Black Gnat, Renegade.',en:'Griffith\'s Gnat, Shipman\'s Buzzer, Black Gnat, Renegade.'}},
         ]},
       ]},
+      { id:'insekten/emerger', num:'15', label:{de:'Emerger',en:'Emergers'}, svgId:'', sections:[
+        { heading:{de:'Was ist ein Emerger?',en:'What is an Emerger?'}, rows:[
+          {term:{de:'Definition',en:'Definition'}, text:{de:'Ein Emerger ist ein Insekt im Schlupfmoment — halb im Wasser, halb in der Luft. Der alte Schuck klebt noch am Hinterleib.',en:'An emerger is an insect in the act of hatching — half in water, half in air. The old shuck still clings to the abdomen.'}},
+          {term:{de:'Warum so wichtig?',en:'Why so important?'}, text:{de:'Fische fressen selektiv Emerger — das Insekt ist verwundbar, langsam und im Oberflächenfilm gefangen.',en:'Fish feed selectively on emergers — the insect is vulnerable, slow and trapped in the surface film.'}},
+          {term:{de:'Schlupffilm',en:'Surface film'}, text:{de:'Der Oberflächenfilm ist eine physikalische Barriere. Insekten brauchen Sekunden zum Durchbrechen — diese Zeit nutzen Fische.',en:'The surface film is a physical barrier. Insects need seconds to break through — fish exploit this critical time.'}},
+        ]},
+        { heading:{de:'Klassische Emerger-Muster',en:'Classic emerger patterns'}, rows:[
+          {term:{de:'Klinkhammer',en:'Klinkhammer'}, text:{de:'Parachute-Post als Schwimmanker; Körper und Thorax hängen tief im Film. Einer der effektivsten Emerger weltweit.',en:'Parachute post as float anchor; body and thorax hang deep in the surface film. One of the most effective emergers worldwide.'}},
+          {term:{de:'CDC Emerger',en:'CDC Emerger'}, text:{de:'CDC-Faser als Flügel- und Schuck-Imitat. Schwimmt tief und kaum verdreht — täuscht selektive Fische.',en:'CDC fibre as wing and shuck imitation. Floats low, barely distorted — deceives selective fish.'}},
+          {term:{de:'Sparkle Dun',en:'Sparkle Dun'}, text:{de:'Antron-Yarn imitiert den alten Schuck. Kein Flügel nötig — das Glitzern des Antron reicht für selektive Forellen.',en:'Antron-Yarn imitates the old shuck. No wing needed — the sparkle of the Antron suffices for selective trout.'}},
+          {term:{de:'RS2',en:'RS2'}, text:{de:'Dünner Quill-Körper mit kurzen CDC-Flügeln. Extrem effektiv für Midges und BWO in Hakengröße 18–24.',en:'Slim quill body with short CDC wings. Extremely effective for midges and BWO on hook sizes 18–24.'}},
+        ]},
+        { heading:{de:'Schuck-Materialien',en:'Shuck materials'}, rows:[
+          {term:{de:'Materialien',en:'Materials'}, text:{de:'Antron, Z-Lon, Sparkle Yarn, Zelon — transparent, glitzernd, bleibt im Oberflächenfilm haften.',en:'Antron, Z-Lon, Sparkle Yarn, Zelon — transparent, sparkly, adheres in the surface film.'}},
+          {term:{de:'Farbe',en:'Colour'}, text:{de:'Schuck meist etwas dunkler als der fertige Körper. Braun, Oliv, Bernstein — am Bogenpunkt anbinden.',en:'Shuck usually slightly darker than the finished body. Brown, olive, amber — tie in at the bend.'}},
+        ]},
+      ]},
     ]},
     { id:'anatomie', label:{de:'Anatomie',en:'Anatomy'}, nodes:[
       { id:'anatomie/parts', num:'05', label:{de:'Bauteile',en:'Components'}, svgId:'fly_anatomy', sections:[
@@ -1046,6 +1063,63 @@ class Component extends DCLogic {
           ['#12','3,3 mm',{de:'Mittlere Nymphe',en:'Medium nymph'}],
           ['#10','3,8 mm',{de:'Große Nymphe',en:'Large nymph'}],
           ['#8–6','4,0–4,6 mm',{de:'Streamer, Stonefly',en:'Streamer, stonefly'}],
+        ]},
+      ]},
+    ]},
+    { id:'technik', label:{de:'Bindtechniken',en:'Tying Techniques'}, nodes:[
+      { id:'technik/thread', num:'16', label:{de:'Faden-Grundlagen',en:'Thread Fundamentals'}, svgId:'', sections:[
+        { heading:{de:'Fadenführung und Spannung',en:'Thread control and tension'}, rows:[
+          {term:{de:'Bobbin-Haltung',en:'Bobbin hold'}, text:{de:'Bobbin tief halten für mehr Hebelkraft. Faden stets gespannt — lockere Wraps rotieren und bauen unerwünschten Bulk auf.',en:'Hold bobbin low for more leverage. Thread always under tension — loose wraps rotate and build unwanted bulk.'}},
+          {term:{de:'Drallrichtung',en:'Twist direction'}, text:{de:'Bobbin gegen den Uhrzeigersinn: Faden flacht ab für breite Lagen. Im Uhrzeigersinn: Faden wird rund und schneidet besser.',en:'Rotate bobbin counter-clockwise: thread flattens for wide layers. Clockwise: thread rounds and cuts better.'}},
+          {term:{de:'An der Reissgrenze',en:'At breaking point'}, text:{de:'An der Reissgrenze binden erzeugt die kleinsten Köpfe und sichersten Bindungen. Weniger Faden = mehr Kontrolle.',en:'Tying at breaking point creates the smallest heads and most secure bindings. Less thread = more control.'}},
+        ]},
+        { heading:{de:'Half-Hitch und Whip Finish',en:'Half-hitch and whip finish'}, rows:[
+          {term:{de:'Half-Hitch',en:'Half-hitch'}, text:{de:'Temporärer Sicherungsknoten zwischen Bindeschritten. Mit Finger oder Whip-Finish-Tool. 2–3 Schlingen reichen.',en:'Temporary securing knot between tying steps. With finger or whip-finish tool. 2–3 loops suffice.'}},
+          {term:{de:'Whip Finish (Finger)',en:'Whip finish (finger)'}, text:{de:'4–6 spiralförmige Schlingen über das Fadenende legen, dann durchziehen. Sicherster Kopfabschluss überhaupt.',en:'Place 4–6 spiral loops over the thread end, then pull through. The most secure head finish of all.'}},
+          {term:{de:'Whip-Finish-Tool',en:'Whip-finish tool'}, text:{de:'Matarelli- oder Thompson-Tool erlaubt den Whip Finish auch an engen Stellen direkt am Hakenöhr.',en:'Matarelli or Thompson tool allows whip finish even in tight spots directly at the hook eye.'}},
+        ]},
+      ]},
+      { id:'technik/dubbing', num:'17', label:{de:'Dubbing-Techniken',en:'Dubbing Techniques'}, svgId:'', sections:[
+        { heading:{de:'Direkt-Dubbing',en:'Direct dubbing'}, rows:[
+          {term:{de:'Technik',en:'Technique'}, text:{de:'Dubbing dünn auf den Faden auftragen und fest andrehen. Ergibt schlanke, texturierte Körper.',en:'Apply dubbing thinly to the thread and twist firmly. Creates slim, textured bodies.'}},
+          {term:{de:'Häufiger Fehler',en:'Common mistake'}, text:{de:'Zu viel Dubbing auf einmal erzeugt dicke, klumpige Körper. Immer weniger ist mehr.',en:'Too much dubbing at once creates thick, lumpy bodies. Always less is more.'}},
+        ]},
+        { heading:{de:'Dubbing-Loop',en:'Dubbing loop'}, rows:[
+          {term:{de:'Technik',en:'Technique'}, text:{de:'Fadenloop öffnen, Dubbing einlegen, mit Dubbing-Twister verdrehen. Ergibt volle, spikige Körper mit maximaler Bewegung.',en:'Open thread loop, lay in dubbing, twist with dubbing twister. Creates full, spiky bodies with maximum movement.'}},
+          {term:{de:'Einsatz',en:'Use'}, text:{de:'Für raue Nymphen-Thoraxe, Streamer-Köpfe und Muster mit maximaler Wasserbewegung.',en:'For rough nymph thoraxes, streamer heads and patterns requiring maximum water movement.'}},
+          {term:{de:'Split-Thread',en:'Split thread'}, text:{de:'Faden aufdrehen bis er sich öffnet, Dubbing einstopfen, wieder verdrehen — kein Loop-Tool erforderlich.',en:'Untwist thread until it opens, stuff in dubbing, re-twist — no loop tool required.'}},
+        ]},
+        { heading:{de:'Tipps',en:'Tips'}, rows:[
+          {term:{de:'Feucht arbeiten',en:'Work damp'}, text:{de:'Leicht befeuchtete Fingerkuppen verhindern das Wegfliegen feiner Fasern. Nicht zu nass.',en:'Lightly moistened fingertips prevent fine fibres from flying away. Not too wet.'}},
+          {term:{de:'Mischen',en:'Blending'}, text:{de:'Naturdubbing mit 10–20 % UV-Dubbing mischen für Glanz ohne Synthetics-Look.',en:'Mix natural dubbing with 10–20 % UV dubbing for sheen without a synthetic look.'}},
+        ]},
+      ]},
+      { id:'technik/finishing', num:'18', label:{de:'Oberflächen und Finish',en:'Finishing Coatings'}, svgId:'', sections:[
+        { heading:{de:'UV-Harz',en:'UV resin'}, rows:[
+          {term:{de:'Vorteile',en:'Advantages'}, text:{de:'Sekundenschnell aushärtend mit UV-Lampe. Ideal für Nymphen-Thoraxe, Köpfe und Ribbing-Versiegelung.',en:'Cures in seconds with UV lamp. Ideal for nymph thoraxes, heads and rib sealing.'}},
+          {term:{de:'Typen',en:'Types'}, text:{de:'Thin (dünnflüssig): selbstverlaufend für Quill-Körper. Thick/Gel: formbar für Köpfe und 3D-Körper (Perdigon).',en:'Thin: self-levelling for quill bodies. Thick/Gel: mouldable for heads and 3D bodies (Perdigon).'}},
+          {term:{de:'Auftrag-Tipp',en:'Application tip'}, text:{de:'Immer in dünnen Schichten auftragen und zwischen den Lagen ausshärten. Dicker Auftrag bleibt klebrig.',en:'Always apply in thin layers and cure between coats. Thick applications remain tacky.'}},
+        ]},
+        { heading:{de:'Kopflack und Zement',en:'Head cement'}, rows:[
+          {term:{de:'Cellire und Alternativen',en:'Cellire and alternatives'}, text:{de:'Klassischer Lösungsmittel-Kopflack. Dünne Schicht auf den Whip-Finish-Kopf — härtet glashart.',en:'Classic solvent-based head cement. Thin coat on whip-finish head — dries glass-hard.'}},
+          {term:{de:'Sekundenkleber (CA)',en:'Superglue (CA)'}, text:{de:'Dünnflüssiger Sekundenkleber auf den Fadenkopf sichert den Whip Finish absolut zuverlässig.',en:'Thin superglue on thread head secures the whip finish absolutely reliably.'}},
+          {term:{de:'Nagellack',en:'Nail varnish'}, text:{de:'Günstige Alternative zu Cellire. Schwarz oder klar — deckt gut und trocknet schnell.',en:'Budget alternative to Cellire. Black or clear — good coverage and fast drying.'}},
+        ]},
+      ]},
+      { id:'technik/hair', num:'19', label:{de:'Haararbeiten',en:'Hair Techniques'}, svgId:'', sections:[
+        { heading:{de:'Hair Stacker',en:'Hair stacker'}, rows:[
+          {term:{de:'Zweck',en:'Purpose'}, text:{de:'Richtet Haarspitzen durch Klopfen aus. Unerlässlich für Caddis-Flügel, Wulff-Flügel und Comparadun.',en:'Aligns hair tips through tapping. Essential for caddis wings, Wulff wings and Comparadun.'}},
+          {term:{de:'Technik',en:'Technique'}, text:{de:'Haare mit Spitzen nach unten einfüllen, 5–8 Mal klopfen, vorsichtig entnehmen ohne Ausrichtung zu stören.',en:'Fill with tips down, tap 5–8 times, carefully remove without disturbing the alignment.'}},
+          {term:{de:'Tipp',en:'Tip'}, text:{de:'Weniger Haare stapeln besser. Zu voll — keine Ausrichtung. Fettige Haare zuerst entfetten.',en:'Fewer hairs stack better. Too full — no alignment. Degrease oily hair first.'}},
+        ]},
+        { heading:{de:'Deer Hair spinnen',en:'Spinning deer hair'}, rows:[
+          {term:{de:'Prinzip',en:'Principle'}, text:{de:'Hohlhaar flärt beim Festziehen des Fadens 360° auf. Mehrere Bündel dicht packen, dann mit Rasiermesser formen.',en:'Hollow hair flares 360° as thread is tightened. Pack several bundles tight, then shape with razor blade.'}},
+          {term:{de:'Einsatz',en:'Use'}, text:{de:'Muddler-Köpfe, Dahlberg Diver, Bass Popper. Ergibt sehr schwimmfähige und leichte Fliegenköpfe.',en:'Muddler heads, Dahlberg Diver, Bass Popper. Creates highly buoyant and lightweight fly heads.'}},
+          {term:{de:'Häufiger Fehler',en:'Common mistake'}, text:{de:'Bündel zu groß — Faden schneidet nicht durch alle Haare. Maximal 15–20 Haare pro Bündel.',en:'Bundle too large — thread fails to cut through all hairs. Maximum 15–20 hairs per bundle.'}},
+        ]},
+        { heading:{de:'Bucktail und Streamer-Flügel',en:'Bucktail and streamer wings'}, rows:[
+          {term:{de:'Länge messen',en:'Measuring length'}, text:{de:'Flügelhaare gegen den Schenkeln halten und bei gewünschter Länge abschneiden. Niemals nach dem Anbinden kürzen.',en:'Hold wing hair against the shank and cut at desired length. Never trim to length after tying in.'}},
+          {term:{de:'Pinch-Loop',en:'Pinch loop'}, text:{de:'Erst 2 lockere Schlingen, dann unter Zug festziehen. Verhindert das Rotieren des Flügels um den Schenkeln.',en:'First 2 loose loops, then tighten under tension. Prevents wing from rolling around the shank.'}},
         ]},
       ]},
     ]},
@@ -1725,7 +1799,7 @@ class Component extends DCLogic {
     // wiki tree
     const wikiCatOpen=(id)=>!!st.wikiOpen[id];
     out.wikiTree=this.WIKI_TREE.map(cat=>({
-      id:cat.id, label:L(cat.label), open:wikiCatOpen(cat.id),
+      id:cat.id, label:L(cat.label), open:wikiCatOpen(cat.id), openArrow:wikiCatOpen(cat.id)?'▾':'▸',
       nodes:cat.nodes.map(n=>({
         id:n.id, num:n.num, label:L(n.label),
         active:st.wikiSection===n.id,
@@ -1746,6 +1820,9 @@ class Component extends DCLogic {
     }));
     out.setWikiSection=this.setWikiSection;
     out.toggleWikiSection=this.toggleWikiSection;
+    out.wikiOuterStyle=Object.assign({maxWidth:'1280px',margin:'0 auto',padding:out.padOv},mobile?{display:'block'}:{display:'flex',gap:0,alignItems:'flex-start'});
+    out.wikiSidebarStyle=mobile?{width:'100%',marginBottom:'16px',paddingBottom:'12px',borderBottom:'1px solid #1d2228'}:{width:'220px',flexShrink:0,position:'sticky',top:'72px',maxHeight:'calc(100vh - 90px)',overflowY:'auto',paddingRight:'12px',paddingBottom:'24px'};
+    out.wikiArticleStyle=mobile?{width:'100%',paddingTop:'4px'}:{flex:1,minWidth:0,paddingLeft:'32px',borderLeft:'1px solid #1d2228'};
 
     // quiz
     const qObj=st.quizQ;
