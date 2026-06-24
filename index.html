@@ -1537,15 +1537,17 @@ class Component extends DCLogic {
         grp.add(new T.Mesh(new T.TubeGeometry(new T.LineCurve3(F,N),1,wr,8,false),hookMat)); }
     }
 
-    if(body){ const bgeo=new T.SphereGeometry(1,34,22); const bp=bgeo.attributes.position; for(let i=0;i<bp.count;i++){ const lx=bp.getX(i)*(bodyLen/2), ly=bp.getY(i)*bodyR, lz=bp.getZ(i)*bodyR; bp.setXYZ(i,lx,ly+spine3(midX+lx),lz); } bgeo.computeVertexNormals(); const bm=new T.Mesh(bgeo, this.bodyMaterial(body)); bm.position.set(midX,0,0); grp.add(bm);
+    const isWorm3d=build.id==='sanjuan'||build.id==='squirmy';
+    const bbX0=isWorm3d?x0-0.6:x0, bbLen=isWorm3d?bodyLen+2.1:bodyLen, bbMidX=isWorm3d?midX+0.45:midX;
+    if(body){ const bgeo=new T.SphereGeometry(1,34,22); const bp=bgeo.attributes.position; for(let i=0;i<bp.count;i++){ const lx=bp.getX(i)*(bbLen/2), ly=bp.getY(i)*bodyR, lz=bp.getZ(i)*bodyR; bp.setXYZ(i,lx,ly+spine3(bbMidX+lx),lz); } bgeo.computeVertexNormals(); const bm=new T.Mesh(bgeo, this.bodyMaterial(body)); bm.position.set(bbMidX,0,0); grp.add(bm);
       const bmth=body.material, bcl=this.colorById(body.color)||{}, bcol=new T.Color(bcl.hex||'#8a8f96');
       if(bmth==='peacock'){
         const fl=0.46, frad=0.011, bands=14, perBand=18;
-        for(let w=1;w<bands;w++){ const tt=w/bands; const x=x0+tt*bodyLen; const prof=this.ellipseProfile(tt); const rr=bodyR*Math.max(0.22,prof); const sy3=spine3(x);
+        for(let w=1;w<bands;w++){ const tt=w/bands; const x=bbX0+tt*bbLen; const prof=this.ellipseProfile(tt); const rr=bodyR*Math.max(0.22,prof); const sy3=spine3(x);
           for(let j=0;j<perBand;j++){ const ang=j/perBand*Math.PI*2 + w*0.4; const nx=Math.cos(ang), ny=Math.sin(ang); const flu=fl*(0.6+0.5*(((w*7+j*5)%13)/13)); const p0=new T.Vector3(x,sy3+nx*rr*0.96,ny*rr*0.96); const p1=new T.Vector3(x-0.05,sy3+nx*(rr+flu),ny*(rr+flu)); const col=bcol.clone().multiplyScalar(0.8+0.4*(((j*53)%11)/11)); const fm=new T.MeshStandardMaterial({color:col,roughness:0.92,metalness:0.3}); grp.add(new T.Mesh(new T.TubeGeometry(new T.LineCurve3(p0,p1),1,frad,5,false),fm)); } }
       } else if(bmth==='pheasant'){
         const rm=new T.MeshStandardMaterial({color:new T.Color('#2e2013'),roughness:0.7,metalness:0.05}); const rings=9;
-        for(let i=1;i<rings;i++){ const tt=i/rings; const x=x0+tt*bodyLen; const rr=bodyR*Math.max(0.18,this.ellipseProfile(tt))*1.02; const tor=new T.Mesh(new T.TorusGeometry(rr,0.015,7,20),rm); tor.position.set(x,spine3(x),0); tor.rotation.y=Math.PI/2; grp.add(tor); }
+        for(let i=1;i<rings;i++){ const tt=i/rings; const x=bbX0+tt*bbLen; const rr=bodyR*Math.max(0.18,this.ellipseProfile(tt))*1.02; const tor=new T.Mesh(new T.TorusGeometry(rr,0.015,7,20),rm); tor.position.set(x,spine3(x),0); tor.rotation.y=Math.PI/2; grp.add(tor); }
       }
       // universal wrap rings — every body shows distinct windings
       if(bmth!=='pheasant'){
@@ -1555,12 +1557,12 @@ class Component extends DCLogic {
         const tubeR = bmth==='chenille'?0.055 : (bmth==='dubbing_syn'||bmth==='dubbing_nat')?0.045 : bmth==='peacock'?0.04 : bmth==='floss'?0.022 : 0.03;
         const peacockOff = bmth==='peacock';
         const wm=new T.MeshStandardMaterial({color:ringCol,roughness:metal?0.16:0.7,metalness:metal?0.88:0.06});
-        for(let i=1;i<wraps;i++){ const tt=i/wraps; const x=x0+tt*bodyLen; const surf=bodyR*Math.max(0.2,this.ellipseProfile(tt)); const rr=peacockOff? surf*1.05 : surf*1.03; const tor=new T.Mesh(new T.TorusGeometry(rr,tubeR,9,26),wm); tor.position.set(x,spine3(x),0); tor.rotation.y=Math.PI/2; grp.add(tor); }
+        for(let i=1;i<wraps;i++){ const tt=i/wraps; const x=bbX0+tt*bbLen; const surf=bodyR*Math.max(0.2,this.ellipseProfile(tt)); const rr=peacockOff? surf*1.05 : surf*1.03; const tor=new T.Mesh(new T.TorusGeometry(rr,tubeR,9,26),wm); tor.position.set(x,spine3(x),0); tor.rotation.y=Math.PI/2; grp.add(tor); }
       }
       if(bmth==='chenille'){
         const fm=new T.MeshStandardMaterial({color:bcol.clone().multiplyScalar(0.96),roughness:0.97,metalness:0.02});
         const bands=16, perBand=13;
-        for(let w=1;w<bands;w++){ const tt=w/bands; const x=x0+tt*bodyLen; const prof=this.ellipseProfile(tt); const rr=bodyR*Math.max(0.25,prof); const sy3=spine3(x);
+        for(let w=1;w<bands;w++){ const tt=w/bands; const x=bbX0+tt*bbLen; const prof=this.ellipseProfile(tt); const rr=bodyR*Math.max(0.25,prof); const sy3=spine3(x);
           for(let j=0;j<perBand;j++){ const ang=j/perBand*Math.PI*2 + w*0.7; const nx=Math.cos(ang), ny=Math.sin(ang); const f=0.11*(0.55+0.7*(((w*7+j*5)%13)/13)); const p0=new T.Vector3(x,sy3+nx*rr*0.9,ny*rr*0.9); const p1=new T.Vector3(x+(((j*3)%3-1)*0.025),sy3+nx*(rr+f),ny*(rr+f)); grp.add(new T.Mesh(new T.TubeGeometry(new T.LineCurve3(p0,p1),1,0.006,4,false),fm)); } }
       }
     }
@@ -1773,41 +1775,43 @@ class Component extends DCLogic {
 
     // body (with per-material texture)
     if (body){
+      const isWorm=build.id==='sanjuan'||build.id==='squirmy';
+      const bx0=isWorm?x0-24:x0, bx1=isWorm?x1+60:x1;
       const bc=hex(body.color); const a=ampFor(body.material); const m=body.material;
-      const mid=(x0+x1)/2, half=(x1-x0)/2; const cy0=cyAt(mid);
+      const mid=(bx0+bx1)/2, half=(bx1-bx0)/2; const cy0=cyAt(mid);
       const hh=(x)=>{ const u=(x-mid)/half; return a*Math.sqrt(Math.max(0,1-u*u)); };
-      let topD=`M${x0},${cyAt(x0)}`, botD='';
-      for(let i=0;i<=24;i++){ const x=x0+(x1-x0)*(i/24); const c=cyAt(x), t=hh(x); topD+=` L${x.toFixed(1)},${(c-t).toFixed(1)}`; }
-      for(let i=24;i>=0;i--){ const x=x0+(x1-x0)*(i/24); const c=cyAt(x), t=hh(x); botD+=` L${x.toFixed(1)},${(c+t).toFixed(1)}`; }
+      let topD=`M${bx0},${cyAt(bx0)}`, botD='';
+      for(let i=0;i<=24;i++){ const x=bx0+(bx1-bx0)*(i/24); const c=cyAt(x), t=hh(x); topD+=` L${x.toFixed(1)},${(c-t).toFixed(1)}`; }
+      for(let i=24;i>=0;i--){ const x=bx0+(bx1-bx0)*(i/24); const c=cyAt(x), t=hh(x); botD+=` L${x.toFixed(1)},${(c+t).toFixed(1)}`; }
       const bodyD=topD+botD+' Z';
       E('path',{d:bodyD,fill:bc});
       // edge fuzz (outside clip, breaks the silhouette) for dubbing / chenille
       if (m==='chenille'||m==='dubbing_syn'||m==='dubbing_nat'){
         const fl = m==='chenille'?7:5, stepX = m==='chenille'?6:7; let fk=0;
-        for(let x=x0+4;x<x1-2;x+=stepX){ const t=hh(x); if(t<2) continue; const c=cyAt(x); const j=((x*7)%5)-2, fz=fl*(0.6+0.5*(((x*13)%7)/7));
+        for(let x=bx0+4;x<bx1-2;x+=stepX){ const t=hh(x); if(t<2) continue; const c=cyAt(x); const j=((x*7)%5)-2, fz=fl*(0.6+0.5*(((x*13)%7)/7));
           E('line',{key:'fzt'+fk,x1:x,y1:c-t,x2:x+j,y2:c-t-fz,stroke:bc,strokeWidth:1.6,strokeLinecap:'round',opacity:.85});
           E('line',{key:'fzb'+fk,x1:x,y1:c+t,x2:x-j,y2:c+t+fz,stroke:bc,strokeWidth:1.6,strokeLinecap:'round',opacity:.85}); fk++; }
       }
       // clipped interior texture
       const texEls=[]; const TE=(tag,props)=>texEls.push(R.createElement(tag,{key:'tx'+texEls.length,...props}));
       if (m==='tinsel'){
-        TE('path',{d:`M${x0},${cy0-a*0.55} C${x0+40},${cy0-a} ${x1-40},${cy0-a} ${x1},${cy0-a*0.55}`,fill:'none',stroke:'rgba(255,255,255,.6)',strokeWidth:2});
-        for(let x=x0+6;x<x1;x+=11){ const c=cyAt(x); TE('line',{x1:x,y1:c-a,x2:x-7,y2:c+a,stroke:'rgba(0,0,0,.22)',strokeWidth:2.4}); TE('line',{x1:x+3,y1:c-a,x2:x-4,y2:c+a,stroke:'rgba(255,255,255,.4)',strokeWidth:1.2}); }
+        TE('path',{d:`M${bx0},${cy0-a*0.55} C${bx0+40},${cy0-a} ${bx1-40},${cy0-a} ${bx1},${cy0-a*0.55}`,fill:'none',stroke:'rgba(255,255,255,.6)',strokeWidth:2});
+        for(let x=bx0+6;x<bx1;x+=11){ const c=cyAt(x); TE('line',{x1:x,y1:c-a,x2:x-7,y2:c+a,stroke:'rgba(0,0,0,.22)',strokeWidth:2.4}); TE('line',{x1:x+3,y1:c-a,x2:x-4,y2:c+a,stroke:'rgba(255,255,255,.4)',strokeWidth:1.2}); }
       } else if (m==='floss'){
-        TE('path',{d:`M${x0+4},${cy0-a*0.45} C${mid},${cy0-a*0.95} ${mid},${cy0-a*0.95} ${x1-4},${cy0-a*0.45}`,fill:'none',stroke:'rgba(255,255,255,.5)',strokeWidth:3,strokeLinecap:'round'});
+        TE('path',{d:`M${bx0+4},${cy0-a*0.45} C${mid},${cy0-a*0.95} ${mid},${cy0-a*0.95} ${bx1-4},${cy0-a*0.45}`,fill:'none',stroke:'rgba(255,255,255,.5)',strokeWidth:3,strokeLinecap:'round'});
       } else if (m==='peacock'){
-        TE('path',{d:`M${x0},${cy0-a*0.3} C${mid},${cy0-a*1.1} ${mid},${cy0-a*1.1} ${x1},${cy0-a*0.3}`,fill:'none',stroke:'rgba(120,220,180,.4)',strokeWidth:3});
-        for(let x=x0+3;x<x1;x+=4){ const c=cyAt(x),t=hh(x); TE('line',{x1:x,y1:c-t,x2:x-1.5,y2:c+t,stroke:'rgba(8,40,30,.4)',strokeWidth:1}); }
-        for(let x=x0+5;x<x1;x+=9){ const c=cyAt(x),t=hh(x); TE('line',{x1:x,y1:c-t*0.7,x2:x,y2:c-t,stroke:'rgba(150,255,210,.5)',strokeWidth:1.2}); }
+        TE('path',{d:`M${bx0},${cy0-a*0.3} C${mid},${cy0-a*1.1} ${mid},${cy0-a*1.1} ${bx1},${cy0-a*0.3}`,fill:'none',stroke:'rgba(120,220,180,.4)',strokeWidth:3});
+        for(let x=bx0+3;x<bx1;x+=4){ const c=cyAt(x),t=hh(x); TE('line',{x1:x,y1:c-t,x2:x-1.5,y2:c+t,stroke:'rgba(8,40,30,.4)',strokeWidth:1}); }
+        for(let x=bx0+5;x<bx1;x+=9){ const c=cyAt(x),t=hh(x); TE('line',{x1:x,y1:c-t*0.7,x2:x,y2:c-t,stroke:'rgba(150,255,210,.5)',strokeWidth:1.2}); }
       } else if (m==='pheasant'){
-        for(let x=x0+8;x<x1;x+=12){ const c=cyAt(x),t=hh(x); TE('path',{d:`M${x},${c-t} Q${x+3},${c} ${x},${c+t}`,fill:'none',stroke:'rgba(40,26,14,.45)',strokeWidth:1.6}); }
-        for(let i=-2;i<=2;i++){ TE('path',{d:`M${x0+2},${cy0+i*a*0.35} C${mid},${cy0+i*a*0.42} ${mid},${cy0+i*a*0.42} ${x1-2},${cy0+i*a*0.35}`,fill:'none',stroke:'rgba(90,60,32,.32)',strokeWidth:0.8}); }
+        for(let x=bx0+8;x<bx1;x+=12){ const c=cyAt(x),t=hh(x); TE('path',{d:`M${x},${c-t} Q${x+3},${c} ${x},${c+t}`,fill:'none',stroke:'rgba(40,26,14,.45)',strokeWidth:1.6}); }
+        for(let i=-2;i<=2;i++){ TE('path',{d:`M${bx0+2},${cy0+i*a*0.35} C${mid},${cy0+i*a*0.42} ${mid},${cy0+i*a*0.42} ${bx1-2},${cy0+i*a*0.35}`,fill:'none',stroke:'rgba(90,60,32,.32)',strokeWidth:0.8}); }
       } else { // dubbing syn / nat: speckle
         const nn = m==='dubbing_nat'?60:42;
-        for(let i=0;i<nn;i++){ const x=x0+(x1-x0)*((i*0.618)%1); const t=hh(x); if(t<2) continue; const c=cyAt(x); const y=c+(((i*37)%100)/100-0.5)*2*t*0.85; const r=0.8+((i*53)%10)/10*1.3; TE('circle',{cx:x,cy:y,r:r,fill:(i%2?'rgba(255,255,255,.3)':'rgba(0,0,0,.28)')}); }
+        for(let i=0;i<nn;i++){ const x=bx0+(bx1-bx0)*((i*0.618)%1); const t=hh(x); if(t<2) continue; const c=cyAt(x); const y=c+(((i*37)%100)/100-0.5)*2*t*0.85; const r=0.8+((i*53)%10)/10*1.3; TE('circle',{cx:x,cy:y,r:r,fill:(i%2?'rgba(255,255,255,.3)':'rgba(0,0,0,.28)')}); }
       }
-      if (m==='dubbing_syn'||m==='dubbing_nat'||m==='peacock'||m==='chenille'){ TE('path',{d:`M${x0+6},${cy0-a*0.4} C${mid},${cy0-a*0.82} ${mid},${cy0-a*0.82} ${x1-6},${cy0-a*0.4}`,fill:'none',stroke:'rgba(255,255,255,.14)',strokeWidth:2,strokeLinecap:'round'}); }
-      TE('path',{d:`M${x0+4},${cy0+a*0.35} C${mid},${cy0+a*0.95} ${mid},${cy0+a*0.95} ${x1-4},${cy0+a*0.35}`,fill:'none',stroke:'rgba(0,0,0,.22)',strokeWidth:3,strokeLinecap:'round'});
+      if (m==='dubbing_syn'||m==='dubbing_nat'||m==='peacock'||m==='chenille'){ TE('path',{d:`M${bx0+6},${cy0-a*0.4} C${mid},${cy0-a*0.82} ${mid},${cy0-a*0.82} ${bx1-6},${cy0-a*0.4}`,fill:'none',stroke:'rgba(255,255,255,.14)',strokeWidth:2,strokeLinecap:'round'}); }
+      TE('path',{d:`M${bx0+4},${cy0+a*0.35} C${mid},${cy0+a*0.95} ${mid},${cy0+a*0.95} ${bx1-4},${cy0+a*0.35}`,fill:'none',stroke:'rgba(0,0,0,.22)',strokeWidth:3,strokeLinecap:'round'});
       if (texEls.length){ E('defs',null,R.createElement('clipPath',{key:'cp',id:'bclip_'+uid},R.createElement('path',{key:'cpp',d:bodyD}))); els.push(R.createElement('g',{key:'btex_'+uid,clipPath:`url(#bclip_${uid})`},texEls)); }
     }
 
