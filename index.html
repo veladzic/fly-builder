@@ -1224,7 +1224,7 @@ class Component extends DCLogic {
   setWikiSection = (e) => { const id=e.currentTarget.dataset.id; const part=id.split('/')[0]; this.setState(s=>({ wikiSection:id, wikiOpen:{...s.wikiOpen,[part]:true} })); };
   toggleWikiSection = (e) => { const id=e.currentTarget.dataset.id; this.setState(s=>({ wikiOpen:{...s.wikiOpen,[id]:!s.wikiOpen[id]} })); };
   goQuiz = () => { const q=this._pickQ(); this.setState({ screen:'quiz', navOpen:false, showResult:false, quizQ:q, quizSel:null, quizAnswered:false, quizScore:{r:0,w:0} }); };
-  answerQuiz = (e) => { const i=parseInt(e.currentTarget.dataset.i,10); if(this.state.quizAnswered) return; const q=this.state.quizQ; if(!q) return; const correct=q.options[i].correct; this.setState(s=>({ quizSel:i, quizAnswered:true, quizScore:{r:s.quizScore.r+(correct?1:0), w:s.quizScore.w+(correct?0:1)} })); };
+  answerQuiz = (e) => { const i=parseInt(e.currentTarget.dataset.i,10); if(this.state.quizAnswered) return; const q=this.state.quizQ; if(!q) return; const correct=q.options[i].c; this.setState(s=>({ quizSel:i, quizAnswered:true, quizScore:{r:s.quizScore.r+(correct?1:0), w:s.quizScore.w+(correct?0:1)} })); };
   nextQuiz = () => { const q=this._pickQ(); this.setState({ quizQ:q, quizSel:null, quizAnswered:false }); };
   _pickQ = () => { const b=this.QUIZ_BANK; return b[Math.floor(Math.random()*b.length)]; };
   onScratchName = (e) => { const v=e.target.value; this.setState({scratchName:v}, ()=>{ if(this.state.build&&this.state.build.custom) this.persistScratch(this.state.build); }); };
