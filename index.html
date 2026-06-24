@@ -51,6 +51,7 @@
         </sc-if>
       </div>
       <button onClick="{{ goWiki }}" style="{{ navWikiStyle }}">{{ t.navWiki }}</button>
+      <button onClick="{{ goQuiz }}" style="{{ navQuizStyle }}">{{ t.navQuiz }}</button>
       <button onClick="{{ goMyBuilds }}" style="{{ navBuildsStyle }}">{{ t.navBuilds }}</button>
     </nav>
     <div style="flex:1"></div>
@@ -369,46 +370,95 @@
 
   <!-- ============ WIKI ============ -->
   <sc-if value="{{ isWiki }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1180px;margin:0 auto;padding:{{ padOv }}">
-      <div style="font-family:'IBM Plex Mono';font-size:11.5px;color:#2fd3ac;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px">{{ t.navWiki }}</div>
-      <h1 style="font-size:34px;font-weight:700;margin:0 0 10px;letter-spacing:-.02em">{{ t.wikiTitle }}</h1>
-      <p style="color:#8b9298;font-size:15px;max-width:620px;margin:0 0 26px;line-height:1.55">{{ t.wikiSub }}</p>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px">
-        <sc-for list="{{ wikiTabs }}" as="wt" hint-placeholder-count="4">
-          <button onClick="{{ setWikiTab }}" data-i="{{ wt.i }}" style="{{ wt.style }}">{{ wt.label }}</button>
-        </sc-for>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;align-items:start">
-        <sc-for list="{{ wikiCards }}" as="c" hint-placeholder-count="6">
-          <div style="background:#13161a;border:1px solid #23282e;border-radius:14px;padding:18px 19px">
-            <div style="font-size:15px;font-weight:700;margin-bottom:14px;letter-spacing:-.01em;color:#e6e8ea">{{ c.heading }}</div>
-            <sc-if value="{{ c.isList }}" hint-placeholder-val="{{ true }}">
-              <div style="display:flex;flex-direction:column;gap:12px">
-                <sc-for list="{{ c.rows }}" as="r" hint-placeholder-count="3">
-                  <div>
-                    <div style="font-size:12px;font-weight:600;color:#2fd3ac;margin-bottom:3px">{{ r.term }}</div>
-                    <div style="font-size:13px;line-height:1.5;color:#aeb4ba">{{ r.text }}</div>
-                  </div>
-                </sc-for>
-              </div>
-            </sc-if>
-            <sc-if value="{{ c.isTable }}" hint-placeholder-val="{{ false }}">
-              <div>
-                <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #2a3038">
-                  <sc-for list="{{ c.cols }}" as="col" hint-placeholder-count="3"><span style="flex:1;font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:#6b7178">{{ col }}</span></sc-for>
-                </div>
-                <sc-for list="{{ c.trows }}" as="tr" hint-placeholder-count="4">
-                  <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #1d2228">
-                    <sc-for list="{{ tr.cells }}" as="cell" hint-placeholder-count="3"><span style="flex:1;font-size:12.5px;color:#c4c8cc;line-height:1.4">{{ cell }}</span></sc-for>
-                  </div>
+    <div style="max-width:1280px;margin:0 auto;padding:{{ padOv }};display:flex;gap:0;align-items:flex-start">
+      <!-- sidebar -->
+      <div style="width:220px;flex-shrink:0;position:sticky;top:72px;max-height:calc(100vh - 90px);overflow-y:auto;padding-right:12px;padding-bottom:24px">
+        <div style="font-family:'IBM Plex Mono';font-size:10px;color:#2fd3ac;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px;padding-left:6px">{{ t.navWiki }}</div>
+        <sc-for list="{{ wikiTree }}" as="cat" hint-placeholder-count="4">
+          <div style="margin-bottom:4px">
+            <button onClick="{{ toggleWikiSection }}" data-id="{{ cat.id }}" style="{{ cat.catStyle }}">
+              <span style="font-size:10px;opacity:.7">{{ cat.open }}</span>
+              {{ cat.label }}
+            </button>
+            <sc-if value="{{ cat.open }}" hint-placeholder-val="{{ true }}">
+              <div style="padding-left:10px;display:flex;flex-direction:column;gap:2px;margin-bottom:4px">
+                <sc-for list="{{ cat.nodes }}" as="wn" hint-placeholder-count="4">
+                  <button onClick="{{ setWikiSection }}" data-id="{{ wn.id }}" style="{{ wn.activeStyle }}">
+                    <span style="font-family:'IBM Plex Mono';font-size:10px;color:#4a5058;flex-shrink:0">{{ wn.num }}</span>
+                    {{ wn.label }}
+                  </button>
                 </sc-for>
               </div>
             </sc-if>
           </div>
         </sc-for>
       </div>
+      <!-- article -->
+      <div style="flex:1;min-width:0;padding-left:32px;border-left:1px solid #1d2228">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-family:'IBM Plex Mono';font-size:11px;color:#4a5058">{{ wikiNodeNum }}</span>
+          <h1 style="font-size:28px;font-weight:700;margin:0;letter-spacing:-.02em">{{ wikiNodeTitle }}</h1>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px;margin-top:20px">
+          <sc-for list="{{ wikiSections }}" as="sec" hint-placeholder-count="3">
+            <div style="background:#13161a;border:1px solid #23282e;border-radius:14px;padding:20px 22px">
+              <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:#e6e8ea;letter-spacing:-.01em">{{ sec.heading }}</div>
+              <sc-if value="{{ sec.isList }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <sc-for list="{{ sec.rows }}" as="r" hint-placeholder-count="4">
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:#2fd3ac;margin-bottom:4px">{{ r.term }}</div>
+                      <div style="font-size:13.5px;line-height:1.6;color:#aeb4ba">{{ r.text }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ sec.isTable }}" hint-placeholder-val="{{ false }}">
+                <div style="overflow-x:auto">
+                  <div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #2a3038">
+                    <sc-for list="{{ sec.cols }}" as="col" hint-placeholder-count="3"><span style="flex:1;font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:#6b7178">{{ col }}</span></sc-for>
+                  </div>
+                  <sc-for list="{{ sec.trows }}" as="tr" hint-placeholder-count="4">
+                    <div style="display:flex;gap:8px;padding:9px 0;border-bottom:1px solid #1d2228">
+                      <sc-for list="{{ tr.cells }}" as="cell" hint-placeholder-count="3"><span style="flex:1;font-size:12.5px;color:#c4c8cc;line-height:1.4">{{ cell }}</span></sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ QUIZ ============ -->
+  <sc-if value="{{ isQuiz }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:680px;margin:0 auto;padding:{{ padOv }}">
+      <div style="font-family:'IBM Plex Mono';font-size:11.5px;color:#2fd3ac;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px">{{ t.quizTitle }}</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px">
+        <h1 style="font-size:32px;font-weight:700;margin:0;letter-spacing:-.02em;flex:1">{{ t.quizSub }}</h1>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'IBM Plex Mono';font-size:10px;color:#6b7178;margin-bottom:2px">{{ t.quizScoreLabel }}</div>
+          <div style="font-size:22px;font-weight:700;color:#2fd3ac">{{ quizScoreR }}<span style="color:#4a5058;font-size:15px"> / {{ quizScoreW }}</span></div>
+        </div>
+      </div>
+      <div style="background:#13161a;border:1px solid #23282e;border-radius:16px;padding:26px 28px;margin-bottom:18px">
+        <div style="font-size:18px;font-weight:600;line-height:1.5;color:#e6e8ea;margin-bottom:22px">{{ quizQuestion }}</div>
+        <sc-for list="{{ quizOptions }}" as="qo" hint-placeholder-count="4">
+          <button onClick="{{ answerQuiz }}" data-i="{{ qo.i }}" style="{{ qo.style }}">
+            <span style="font-family:'IBM Plex Mono';font-size:11px;color:#4a5058;flex-shrink:0">{{ qo.i }}</span>
+            {{ qo.label }}
+          </button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ quizAnswered }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#13161a;border:1px solid #23282e;border-radius:14px;padding:18px 22px;margin-bottom:16px">
+          <div style="font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;color:#6b7178">{{ t.quizExpl }}</div>
+          <div style="font-size:14px;line-height:1.6;color:#aeb4ba">{{ quizExplText }}</div>
+        </div>
+        <button onClick="{{ nextQuiz }}" style="width:100%;padding:14px;background:#2fd3ac;color:#06231e;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">{{ t.quizNext }} →</button>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -451,7 +501,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;de&quot;,&quot;en&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'de'|'en'&quot;},&quot;defaultFilter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;dry&quot;,&quot;nymph&quot;,&quot;streamer&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showTyingSteps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d' };
+  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizScore: {r:0,w:0}, quizAnswered: false };
 
   // ---------- static data ----------
   SIZES = [4,6,8,10,12,14,16,18,20,22];
@@ -593,6 +643,15 @@ class Component extends DCLogic {
     savedOk:{de:'In „Deine Builds“ gespeichert',en:'Saved to your builds'},
     noBuildsTitle:{de:'Noch keine Builds gespeichert',en:'No saved builds yet'},
     noBuildsSub:{de:'Baue eine Fliege im Builder und speichere sie hier ab.',en:'Build a fly in the builder and save it here.'},
+    navQuiz:{de:'Quiz',en:'Quiz'},
+    quizTitle:{de:'Quiz',en:'Quiz'},
+    quizSub:{de:'Teste dein Wissen über Insektenkunde, Anatomie, Haken und Materialien.',en:'Test your knowledge of entomology, anatomy, hooks and materials.'},
+    quizStart:{de:'Quiz starten',en:'Start quiz'},
+    quizNext:{de:'Nächste Frage',en:'Next question'},
+    quizCorrect:{de:'Richtig!',en:'Correct!'},
+    quizWrong:{de:'Falsch.',en:'Wrong.'},
+    quizScoreLabel:{de:'Richtige Antworten',en:'Correct answers'},
+    quizExpl:{de:'Erklärung',en:'Explanation'},
   };
 
   FULL_FLIES = [
@@ -774,143 +833,267 @@ class Component extends DCLogic {
     {id:'minidungeon',type:'streamer',diff:3,name:'Mini Dungeon',tagline:{de:'Kompakter gegliederter Streamer.',en:'A compact articulated streamer.'},parts:{hook:['streamer',6],thread:['140d','olive'],weight:['lead','med'],tail:['marabou','olive'],body:['chenille','olive'],hackle:['rooster','grizzly','palmered'],wing:['bucktail','olive','streamer'],head:['dubbing','olive']}},
   ];
 
-  // ---------- wiki (aus den Lernpostern) ----------
-  WIKI = [
-    {id:'insekten', label:{de:'Insektenkunde',en:'Entomology'}, intro:{de:'Die vier wichtigsten Insektenordnungen für Fliegenfischer — Erkennung, Verhalten und passende Muster.',en:'The four key insect orders for fly fishers — recognition, behaviour and matching patterns.'}, cards:[
-      {type:'list', heading:'Eintagsfliegen (Ephemeroptera / Mayflies)', rows:[
-        {term:'Flügelhaltung', text:'In Ruhe steil aufrecht wie ein Segel — können nicht flach gelegt werden.'},
-        {term:'Schwanzfäden (Cerci)', text:'2–3 extrem lange, feine Fäden am Körperende; Hinterleib schlank, oft nach oben gebogen.'},
-        {term:'Verhalten', text:'Nymphen steigen auf, die „Dun" bricht aus der Hülle und verweilt kurz flugunfähig im Oberflächenfilm. Rhythmischer Paarungstanz in Schwärmen.'},
-        {term:'Top-Muster', text:'Nymphen: Pheasant Tail, Hare\u2019s Ear. Trocken: Adams, BWO, Maifliege (Danica), CDC Spent Spinner.'},
+  // ---------- wiki tree ----------
+  WIKI_TREE = [
+    { id:'insekten', label:{de:'Insektenkunde',en:'Entomology'}, nodes:[
+      { id:'insekten/mayfly', num:'01', label:{de:'Eintagsfliegen',en:'Mayflies'}, svgId:'mayfly', sections:[
+        { heading:{de:'Erkennungsmerkmale',en:'Recognition'}, rows:[
+          {term:{de:'Flügelhaltung',en:'Wing posture'}, text:{de:'In Ruhe steil aufrecht wie ein Segel — können nicht flach gelegt werden. Vorderflügel viel größer als Hinterflügel.',en:'At rest held upright like a sail — cannot be folded flat. Forewings much larger than hindwings.'}},
+          {term:{de:'Schwanzfäden',en:'Tails (cerci)'}, text:{de:'2–3 extrem lange, feine Fäden (Cerci) am Körperende. Hinterleib schlank, oft nach oben gebogen.',en:'2–3 extremely long, slender filaments (cerci) at the abdomen tip. Abdomen slender, often upward-curved.'}},
+          {term:{de:'Flügelvenation',en:'Wing venation'}, text:{de:'Dreieckiges Vorderflügel-Geäder, klar sichtbar. Körperfarbe: Oliv, Gelb, Braun, Grau je nach Art.',en:'Triangular forewing venation, clearly visible. Body colour: olive, yellow, brown, grey depending on species.'}},
+        ]},
+        { heading:{de:'Lebenszyklus',en:'Life cycle'}, rows:[
+          {term:{de:'Stadien',en:'Stages'}, text:{de:'Ei → Nymphe (1–3 Jahre!) → Dun (Subimago) → Spinner (Imago). Einziges Insekt mit zwei Flügelstadien.',en:'Egg → Nymph (1–3 years!) → Dun (subimago) → Spinner (imago). Only insect with two winged stages.'}},
+          {term:{de:'Schlupf',en:'Hatch'}, text:{de:'Nymphe steigt auf, die Dun bricht aus der Hülle und verweilt kurz flugunfähig im Oberflächenfilm — idealer Moment für Fische.',en:'Nymph ascends, dun emerges from shuck and drifts briefly unable to fly in surface film — ideal moment for fish.'}},
+          {term:{de:'Spinner-Fall',en:'Spinner fall'}, text:{de:'Nach dem Paarungsflug fallen die Spinner (Imagines) tot mit ausgebreiteten Flügeln auf die Oberfläche (Spent Spinner).',en:'After mating flight, spinners (imagines) fall dead with wings spread on the surface (spent spinner).'}},
+        ]},
+        { heading:{de:'Wichtige Arten & Muster',en:'Key species & patterns'}, rows:[
+          {term:{de:'Baetis (BWO, Olive)',en:'Baetis (BWO)'}, text:{de:'#16–22, blaugrau-oliv. Ganzjährig, besonders Herbst/Winter. Pheasant Tail Nymphe, CDC BWO, Sparkle Dun.',en:'#16–22, blue-grey-olive. Year-round, especially autumn/winter. Pheasant Tail Nymph, CDC BWO, Sparkle Dun.'}},
+          {term:{de:'Ephemera danica (Maifliege)',en:'Ephemera danica (Mayfly)'}, text:{de:'#8–10, creme-braun. Großer Schlupf Mai–Jun. Green Drake Nymphe, Comparadun, Extended Body Mayfly.',en:'#8–10, cream-brown. Major hatch May–Jun. Green Drake Nymph, Comparadun, Extended Body Mayfly.'}},
+          {term:{de:'Rhithrogena (March Brown)',en:'Rhithrogena (March Brown)'}, text:{de:'#12–14, braun-rotbraun. Frühjahr in Gebirgsbächen. March Brown Nymphe, Wet Fly, Flymph.',en:'#12–14, brown-reddish. Spring in hill streams. March Brown Nymph, Wet Fly, Flymph.'}},
+          {term:{de:'Top-Muster',en:'Top patterns'}, text:{de:'Nymphen: Pheasant Tail, Hare\'s Ear. Trocken: Adams, BWO, CDC Dun, Spinner.',en:'Nymphs: Pheasant Tail, Hare\'s Ear. Dry: Adams, BWO, CDC Dun, Spinner.'}},
+        ]},
       ]},
-      {type:'list', heading:'Köcherfliegen (Trichoptera / Caddis)', rows:[
-        {term:'Flügelhaltung', text:'In Ruhe dach- bzw. zeltförmig über dem Hinterleib gefaltet.'},
-        {term:'Merkmale', text:'KEINE Schwanzfäden. Sehr lange, nach vorn gestreckte Fühler. Behaarter Körper.'},
-        {term:'Verhalten', text:'Larven bauen Köcher (Gehäuse) am Grund. Adulte skattern aktiv über Wasser → aggressive Bisse.'},
-        {term:'Top-Muster', text:'Larven/Puppen: Peeping Caddis, Hydropsyche, Sparkle Pupa. Trocken: Elk Hair Caddis, Goddard Caddis, Deer Hair Sedge.'},
+      { id:'insekten/caddis', num:'02', label:{de:'Köcherfliegen',en:'Caddis'}, svgId:'caddis', sections:[
+        { heading:{de:'Erkennungsmerkmale',en:'Recognition'}, rows:[
+          {term:{de:'Flügelhaltung',en:'Wing posture'}, text:{de:'In Ruhe dach- bzw. zeltförmig über dem Hinterleib gefaltet (kein flacher Tisch wie Eintagsfliegen).',en:'At rest folded tent-like or roof-like over the abdomen (not flat like mayflies).'}},
+          {term:{de:'Fühler & Flügel',en:'Antennae & wings'}, text:{de:'KEINE Schwanzfäden. Sehr lange, nach vorn gestreckte Fühler. Behaarte Flügel (kein Geäder-Muster).',en:'NO tails (cerci). Very long, forward-pointing antennae. Hairy wings (no clear venation pattern).'}},
+          {term:{de:'Körper',en:'Body'}, text:{de:'Schlanker, zylindrischer Körper. Behaarte Augen. Gesamtgröße #8–#22.',en:'Slender, cylindrical body. Hairy eyes. Overall size #8–#22.'}},
+        ]},
+        { heading:{de:'Lebenszyklus & Verhalten',en:'Life cycle & behaviour'}, rows:[
+          {term:{de:'Larve & Köcher',en:'Larva & case'}, text:{de:'Larven bauen Köcher (Gehäuse) aus Sand, Steinchen, Pflanzenmaterial. Hydropsychidae bauen Netze statt Köcher.',en:'Larvae build portable cases from sand, pebbles, plant material. Hydropsychidae spin nets instead.'}},
+          {term:{de:'Puppe',en:'Pupa'}, text:{de:'Puppe schneidet Köcher auf, schwimmt zur Oberfläche. Oft in der Puppenphase gefressen — Sparkle Pupa imitiert das.',en:'Pupa cuts open case, swims to surface. Often taken in pupal stage — Sparkle Pupa imitates this.'}},
+          {term:{de:'Adulte',en:'Adults'}, text:{de:'Adulte skattern aktiv über Wasser und legen Eier ab. Aggressive Bisse auf skatternde Trockenfliegen.',en:'Adults skitter actively over water and lay eggs. Aggressive takes on skating dry flies.'}},
+        ]},
+        { heading:{de:'Muster',en:'Patterns'}, rows:[
+          {term:{de:'Larven/Puppen',en:'Larvae/Pupae'}, text:{de:'Peeping Caddis, Hydropsyche, LaFontaine Sparkle Pupa, Deep Sparkle Pupa, Green Rock Worm.',en:'Peeping Caddis, Hydropsyche, LaFontaine Sparkle Pupa, Deep Sparkle Pupa, Green Rock Worm.'}},
+          {term:{de:'Trocken',en:'Dry'}, text:{de:'Elk Hair Caddis, Goddard Caddis, Deer Hair Sedge, Parachute Caddis, X-Caddis.',en:'Elk Hair Caddis, Goddard Caddis, Deer Hair Sedge, Parachute Caddis, X-Caddis.'}},
+        ]},
       ]},
-      {type:'list', heading:'Steinfliegen (Plecoptera / Stoneflies)', rows:[
-        {term:'Flügelhaltung', text:'Im Ruhezustand völlig flach und parallel auf dem Rücken.'},
-        {term:'Merkmale', text:'Breit, flach, robust gepanzert. Genau 2 kurze, dicke Cerci. Kräftige Fühler (V-Form).'},
-        {term:'Verhalten', text:'Indikator für eiskaltes, sauerstoffreiches Wasser. Kein freies Puppenstadium — Nymphen krabbeln zum Ufer und schlüpfen auf Steinen.'},
-        {term:'Top-Muster', text:'Schwere Nymphen: Pat\u2019s Rubber Legs, Kaufman\u2019s Stone, Prince Nymph. Trocken: Stimulator, Golden Stone Adult.'},
+      { id:'insekten/stonefly', num:'03', label:{de:'Steinfliegen',en:'Stoneflies'}, svgId:'stonefly', sections:[
+        { heading:{de:'Erkennungsmerkmale',en:'Recognition'}, rows:[
+          {term:{de:'Flügelhaltung',en:'Wing posture'}, text:{de:'Im Ruhezustand völlig flach und parallel auf dem Rücken — wie ein Hubschrauber-Rotor über dem Körper.',en:'At rest completely flat, parallel on the back — like helicopter blades over the body.'}},
+          {term:{de:'Körper & Cerci',en:'Body & cerci'}, text:{de:'Breit, flach, robust gepanzert. Genau 2 kurze, dicke Cerci. Kräftige Fühler (V-Form).',en:'Broad, flat, robustly armoured. Exactly 2 short, thick cerci. Stout antennae (V-shape).'}},
+          {term:{de:'Wasserqualität',en:'Water quality'}, text:{de:'Indikator für eiskaltes, sauerstoffreiches Wasser. Fehlen = Wasserverschmutzung.',en:'Indicator of cold, oxygen-rich water. Absence = water pollution.'}},
+        ]},
+        { heading:{de:'Lebenszyklus',en:'Life cycle'}, rows:[
+          {term:{de:'Kein Puppenstadium',en:'No pupal stage'}, text:{de:'Hemimetabole Entwicklung — kein freies Puppenstadium. Nymphen krabbeln zum Ufer und schlüpfen auf Steinen (Exuvien!)',en:'Hemimetabolous development — no free pupal stage. Nymphs crawl to shore and emerge on rocks (exuviae!).'}},
+          {term:{de:'Entwicklungszeit',en:'Development time'}, text:{de:'1–3 Jahre als Nymphe, je nach Art. Erwachsene leben nur wenige Wochen.',en:'1–3 years as nymph, depending on species. Adults live only a few weeks.'}},
+        ]},
+        { heading:{de:'Muster',en:'Patterns'}, rows:[
+          {term:{de:'Schwere Nymphen',en:'Heavy nymphs'}, text:{de:'Pat\'s Rubber Legs, Kaufman\'s Stone, Prince Nymph, Girdle Bug — mit schwerem Tungsten-Bead.',en:'Pat\'s Rubber Legs, Kaufman\'s Stone, Prince Nymph, Girdle Bug — with heavy tungsten bead.'}},
+          {term:{de:'Trocken',en:'Dry'}, text:{de:'Stimulator (gelb/orange), Golden Stone Adult, Sofa Pillow.',en:'Stimulator (yellow/orange), Golden Stone Adult, Sofa Pillow.'}},
+        ]},
       ]},
-      {type:'list', heading:'Zweiflügler / Mücken (Diptera / Midges)', rows:[
-        {term:'Merkmale', text:'NUR 2 Flügel (Hinterflügel zu Halteren verkümmert). Meist winzig (#18–26). Keine Schwanzfäden; Männchen mit buschigen Fühlern.'},
-        {term:'Verhalten', text:'Massenphänomen — schlüpfen selbst im Winter. Puppe hängt oft stundenlang regungslos im Oberflächenfilm → leichte Beute.'},
-        {term:'Top-Muster', text:'Larven/Puppen: Zebra Midge, Bloodworm, Brassie. Trocken: Griffith\u2019s Gnat, Shipman\u2019s Buzzer, Black Gnat.'},
-      ]},
-    ]},
-    {id:'anatomie', label:{de:'Anatomie & Proportionen',en:'Anatomy & proportions'}, intro:{de:'Die Bauteile der Kunstfliege, Faustregeln für Proportionen und die richtige Baureihenfolge.',en:'The parts of an artificial fly, proportion rules of thumb and the correct tying order.'}, cards:[
-      {type:'list', heading:'Bauteile (hinten → vorne)', rows:[
-        {term:'Tag / Butt', text:'Schmaler Glanzring am Bogen (oft Tinsel) als Startpunkt; Butt = abgesetzter, oft andersfarbiger Körperanfang.'},
-        {term:'Schwanz (tail)', text:'Stabilisiert die Silhouette; Länge & Steifheit imitieren die Schwanzfäden (Cerci).'},
-        {term:'Körper & Rippung', text:'Abdomen = Hauptmasse über dem Schenkel (Dubbing, Floss, Quill, Herl). Rippung spiralig, meist gegenläufig (counter-wrap).'},
-        {term:'Thorax & Wing Case', text:'Verdickter vorderer Körper, trägt Beine/Flügel. Wing Case = Rückendecke über dem Thorax (Nymphe).'},
-        {term:'Hechel & Kopf', text:'Hechel = Beine & Auftrieb (radial/soft/palmered). Kopf = sauberer Faden-Abschluss mit Whip Finish & Lack.'},
-      ]},
-      {type:'list', heading:'Proportionen — Faustregeln', rows:[
-        {term:'Hakenspalt = Einheit', text:'Viele Maße richten sich nach dem Spalt (gap): Schwanz- & Hechellänge ≈ 1–2× Spalt.'},
-        {term:'Schwanz', text:'Trockenfliege ≈ Schenkellänge; Nymphe kürzer (½–1× Körperlänge).'},
-        {term:'Hechel', text:'Dry-Hackle-Faser ≈ 1,5–2× Hakenspalt; mit Hackle-Gauge prüfen.'},
-        {term:'Körper & Kopf-Reserve', text:'Körper vom Bogen bis ~¾ des Schenkels. Letzte 10–15 % für den Kopf frei lassen — nie bis ans Öhr binden.'},
-      ]},
-      {type:'list', heading:'Anatomie nach Typ', rows:[
-        {term:'Trockenfliege', text:'Schwanz + schlanker Körper + aufrechter Flügel + steife Hechel → schwimmt hoch.'},
-        {term:'Nymphe', text:'Schwanz + Körper + Rippung + Thorax + Wing Case + Beine; oft Bead Head.'},
-        {term:'Nassfliege / Soft Hackle', text:'Schlanker Körper + weiche, zurückgestrichene Hechel → sinkt & pulsiert.'},
-        {term:'Streamer', text:'Langer Marabou-Schwanz + Körper + palmered/Schulter-Hechel + Kopf/Cone → Fischchen.'},
-      ]},
-      {type:'list', heading:'Baureihenfolge: hinten → vorne', rows:[
-        {term:'Reihenfolge', text:'Faden → (Perle) → Schwanz → Rippung anbinden → Körper → Rippung wickeln → Thorax → Flügel → Hechel → Kopf.'},
-        {term:'Warum hinten beginnen', text:'Jeder Schritt deckt die Bindestelle des vorigen ab → schlanker, sauberer Aufbau.'},
-      ]},
-    ]},
-    {id:'haken', label:{de:'Haken-Kunde',en:'Hooks'}, intro:{de:'Aufbau, Bogenformen, Drahtstärke und das Größensystem der Haken.',en:'Anatomy, bend shapes, wire weight and the hook sizing system.'}, cards:[
-      {type:'list', heading:'Haken-Anatomie', rows:[
-        {term:'Öhr (eye)', text:'Up-/Down-/Straight-Eye oder Looped — steuert Anbindung, Lage & Köderprofil.'},
-        {term:'Schenkel & Bogen', text:'Schenkel = Baufläche; Bogenform (Sproat, Limerick, Sneck, Model Perfect) prägt Halt & Optik.'},
-        {term:'Spitze & Widerhaken', text:'Gerade/Beak/Spear; barbless oder Mikro-Widerhaken = schonendes Lösen.'},
-        {term:'Spalt & Schenkellänge', text:'Spalt (gap) bestimmt die Größe; Schenkellänge als „X long/short" (z. B. 2XL = 2 Größen länger).'},
-      ]},
-      {type:'list', heading:'Draht & Sonderformen', rows:[
-        {term:'Drahtstärke', text:'„X fine/heavy" — fein für Trocken (Auftrieb), schwer für Nass/Streamer (Sinkrate).'},
-        {term:'Curved & Jig', text:'Curved/Klinkhammer für Nymphen/Emerger; Jig-Haken + Slotted Bead = kopflastig, hakt selten den Grund.'},
-        {term:'Bogenformen', text:'Sproat · Limerick · Sneck · Model Perfect · Klinkhammer · Jig · Barbless.'},
-      ]},
-      {type:'list', heading:'Größensystem', rows:[
-        {term:'Größenzahl', text:'Je größer die Zahl, desto kleiner der Haken (#2 groß … #28 winzig); meist gerade Zahlen.'},
-        {term:'Aught-System (/0)', text:'Über #1 hinaus wachsend: 1/0, 2/0, 3/0 … — Streamer, Hecht & Salzwasser.'},
-        {term:'X-Long/Short & Marke', text:'2XL ändert die Schenkellänge bei gleichem Spalt; Größen variieren je Marke (TMC/Daiichi/Hanák).'},
-      ]},
-      {type:'list', heading:'Modelle nach Fliege', rows:[
-        {term:'Trocken', text:'Standard bis 1X-fine, gerade, Down-Eye — Auftrieb & klassische Proportion.'},
-        {term:'Nymphe', text:'Curved oder 1–2XH (heavy); oft Jig + Slotted Bead für tiefes, hakenfreies Treiben.'},
-        {term:'Nass', text:'Etwas schwerer, Down-Eye, Standardbogen — sinkt sanft & gleichmäßig.'},
-        {term:'Streamer', text:'3XL–6XL Langschenkel oder Tubes/Shanks + Stinger-Haken für bessere Hakquote.'},
+      { id:'insekten/midge', num:'04', label:{de:'Mücken / Midges',en:'Midges'}, svgId:'midge', sections:[
+        { heading:{de:'Erkennungsmerkmale',en:'Recognition'}, rows:[
+          {term:{de:'Flügelzahl',en:'Wing count'}, text:{de:'NUR 2 Flügel — Hinterflügel zu Halteren (Schwingkölbchen) verkümmert. Einzigartiges Diptera-Merkmal.',en:'ONLY 2 wings — hindwings reduced to halteres (balance organs). Unique Diptera trait.'}},
+          {term:{de:'Größe & Form',en:'Size & shape'}, text:{de:'Meist winzig (#18–26). Keine Schwanzfäden. Männchen mit buschigen, gefiederten Fühlern. Bucklig wirkender Thorax.',en:'Usually tiny (#18–26). No tails. Males with bushy, feathered antennae. Humped-looking thorax.'}},
+        ]},
+        { heading:{de:'Verhalten',en:'Behaviour'}, rows:[
+          {term:{de:'Schlupf',en:'Hatch'}, text:{de:'Massenphänomen — schlüpfen selbst im Winter bei 2°C. Puppe hängt oft stundenlang regungslos im Oberflächenfilm.',en:'Mass phenomenon — hatch even in winter at 2°C. Pupa hangs motionless in surface film for hours.'}},
+          {term:{de:'Bedeutung',en:'Importance'}, text:{de:'Bei Stillwasser und Tailwaters oft die wichtigste Nahrungsquelle. Besonders in klaren Seen.',en:'In stillwater and tailwaters often the most important food source. Especially in clear lakes.'}},
+        ]},
+        { heading:{de:'Muster',en:'Patterns'}, rows:[
+          {term:{de:'Larven/Puppen',en:'Larvae/Pupae'}, text:{de:'Zebra Midge, Bloodworm, Brassie, WD-40, Disco Midge.',en:'Zebra Midge, Bloodworm, Brassie, WD-40, Disco Midge.'}},
+          {term:{de:'Trocken',en:'Dry'}, text:{de:'Griffith\'s Gnat, Shipman\'s Buzzer, Black Gnat, Renegade.',en:'Griffith\'s Gnat, Shipman\'s Buzzer, Black Gnat, Renegade.'}},
+        ]},
       ]},
     ]},
-    {id:'material', label:{de:'Materialkunde',en:'Materials'}, intro:{de:'Bindefaden, Federn & Hecheln, Dubbing, Haar & Flügel sowie Flash, Rippung und Beschwerung.',en:'Thread, feathers & hackle, dubbing, hair & wing plus flash, rib and weight.'}, cards:[
-      {type:'list', heading:'Bindefaden & Zwirn', rows:[
-        {term:'Denier vs. Aught', text:'Aught (8/0…) ist herstellerabhängig; Denier (g/9000 m) ist die einzige vergleichbare Größe.'},
-        {term:'GSP / Dyneema', text:'Max. Reißkraft pro Durchmesser, kaum Dehnung — schneidet Material, Knoten rutschen leichter.'},
-        {term:'Drall (twist)', text:'Bobbin gegen UZS → Faden flacht ab (flache Wraps); im UZS → rund (mehr Schnittkraft).'},
-        {term:'Profi-Tipp', text:'An der Reißgrenze binden → kleinste Köpfe. Spule tief halten = mehr Hebel & Kontrolle.'},
+    { id:'anatomie', label:{de:'Anatomie',en:'Anatomy'}, nodes:[
+      { id:'anatomie/parts', num:'05', label:{de:'Bauteile',en:'Components'}, svgId:'fly_anatomy', sections:[
+        { heading:{de:'Bauteile von hinten nach vorne',en:'Components back to front'}, rows:[
+          {term:{de:'Tag / Butt',en:'Tag / butt'}, text:{de:'Schmaler Glanzring am Bogen (oft Tinsel) als Startpunkt; Butt = abgesetzter, oft andersfarbiger Körperanfang.',en:'Small bright ring at the bend (often tinsel) as starting point; butt = separate, often different-coloured body start.'}},
+          {term:{de:'Schwanz (tail)',en:'Tail'}, text:{de:'Stabilisiert die Silhouette; Länge & Steifheit imitieren Cerci. Länge ≈ Schenkellänge bei Trocken, kürzer bei Nymphe.',en:'Stabilises the silhouette; length & stiffness imitate cerci. Length ≈ shank length for dry, shorter for nymph.'}},
+          {term:{de:'Körper & Rippung',en:'Body & rib'}, text:{de:'Abdomen = Hauptmasse über dem Schenkel (Dubbing, Floss, Quill, Herl). Rippung spiralig, meist gegenläufig (counter-wrap).',en:'Abdomen = main bulk over shank (dubbing, floss, quill, herl). Rib spiralled, usually counter-direction (counter-wrap).'}},
+          {term:{de:'Thorax & Wing Case',en:'Thorax & wing case'}, text:{de:'Verdickter vorderer Körper, trägt Beine/Flügel. Wing Case = Rückendecke über dem Thorax (nur Nymphe).',en:'Enlarged front body, carries legs/wings. Wing case = dorsal cover over thorax (nymphs only).'}},
+          {term:{de:'Hechel & Kopf',en:'Hackle & head'}, text:{de:'Hechel = Beine & Auftrieb (radial/soft/palmered). Kopf = sauberer Fadenabschluss mit Whip Finish & Lack.',en:'Hackle = legs & flotation (radial/soft/palmered). Head = clean thread finish with whip finish & varnish.'}},
+        ]},
+        { heading:{de:'Baureihenfolge: hinten nach vorne',en:'Tying order: back to front'}, rows:[
+          {term:{de:'Reihenfolge',en:'Sequence'}, text:{de:'Faden aufspulen → (Perle) → Schwanz → Rippung anbinden → Körper → Rippung wickeln → Thorax → Flügel → Hechel → Kopf.',en:'Thread on → (bead) → tail → tie in rib → body → wrap rib → thorax → wings → hackle → head.'}},
+          {term:{de:'Warum hinten beginnen',en:'Why start at back'}, text:{de:'Jeder Schritt deckt die Bindestelle des vorigen ab → schlanker, sauberer Aufbau ohne sichtbare Übergänge.',en:'Each step covers the tie-in point of the previous → slim, clean build with no visible transitions.'}},
+          {term:{de:'Kopf-Reserve',en:'Head space'}, text:{de:'Letzte 10–15 % des Schenkels frei lassen — nie bis ans Öhr binden. Kopf-Lack bringt Durability.',en:'Keep last 10–15 % of shank free — never tie to the eye. Head varnish adds durability.'}},
+        ]},
       ]},
-      {type:'table', heading:'Aught ↔ Denier (Umrechnung)', cols:['Aught','Denier','Hakengröße','Einsatz'], rows:[
-        ['3/0','~280','#1/0–4','Streamer, Hecht'],
-        ['6/0','~140','#6–12','Nymphen, Nass, Streamer'],
-        ['8/0','~70','#12–18','Universal: Trocken & Nymphe'],
-        ['10/0','~50','#16–20','Kleine Trockenfliegen'],
-        ['14/0','~30','#18–24','Midges, Tricos, Mikro'],
-        ['16/0','~18','#22–28','Kleinste Muster'],
+      { id:'anatomie/proportions', num:'06', label:{de:'Proportionen',en:'Proportions'}, svgId:'proportions', sections:[
+        { heading:{de:'Proportions-Faustregeln',en:'Proportion rules of thumb'}, rows:[
+          {term:{de:'Hakenspalt = Einheit',en:'Hook gap = unit'}, text:{de:'Viele Maße richten sich nach dem Spalt (gap): Schwanz- & Hechellänge ≈ 1–2× Spalt.',en:'Many measurements relate to the gap: tail & hackle length ≈ 1–2× gap.'}},
+          {term:{de:'Schwanz',en:'Tail'}, text:{de:'Trockenfliege ≈ Schenkellänge; Nymphe kürzer (½–1× Körperlänge); Streamer 1–1,5× Hakenlänge.',en:'Dry fly ≈ shank length; nymph shorter (½–1× body length); streamer 1–1.5× hook length.'}},
+          {term:{de:'Hechel',en:'Hackle'}, text:{de:'Dry-Hackle-Faser ≈ 1,5–2× Hakenspalt; mit Hackle-Gauge prüfen. Nass/Soft Hackle etwas länger.',en:'Dry hackle fibre ≈ 1.5–2× hook gap; check with hackle gauge. Wet/soft hackle slightly longer.'}},
+          {term:{de:'Körper',en:'Body'}, text:{de:'Körper vom Bogen bis ~¾ des Schenkels. Letzte 10–15 % für den Kopf frei lassen.',en:'Body from bend to ~¾ of shank. Last 10–15 % kept clear for head.'}},
+          {term:{de:'Flügel',en:'Wings'}, text:{de:'Trockenfliege: Flügel ≈ Schenkellänge; Nymphe: Wing Case = Thoraxbreite.',en:'Dry fly: wings ≈ shank length; nymph: wing case = thorax width.'}},
+        ]},
       ]},
-      {type:'list', heading:'Federn & Hecheln', rows:[
-        {term:'Cape vs. Saddle', text:'Cape (Hals): großes Größenspektrum inkl. #20–28, 1 Feder/Fliege. Saddle (Rücken): sehr lange Federn, mehrere Fliegen/Feder.'},
-        {term:'Trocken vs. Nass', text:'Trockenhechel: glänzend, steif, hohe Barb-Dichte. Henne/CDC: weich/webbig → Soft Hackle, Beine, Auftrieb.'},
-        {term:'Spezialfedern', text:'Coq de Leon (steife Tails), Rebhuhn (Soft-Hackle-Beine), Peacock Herl (Quill-Body), Biots (segmentierte Körper).'},
-        {term:'Naturtöne', text:'Grizzly (schwarz-weiß gestreift, Adams) & Dun (graublau) sind die zwei wichtigsten; Badger/Furnace/Cree als Varianten.'},
+      { id:'anatomie/types', num:'07', label:{de:'Anatomie nach Typ',en:'Anatomy by type'}, svgId:'fly_types', sections:[
+        { heading:{de:'Trocken-, Nass-, Nymphen- und Streamer-Aufbau',en:'Dry, wet, nymph and streamer construction'}, rows:[
+          {term:{de:'Trockenfliege',en:'Dry fly'}, text:{de:'Schwanz + schlanker Körper + aufrechter Flügel + steife Hechel → sitzt hoch auf der Oberfläche. Wenig Gewicht.',en:'Tail + slim body + upright wing + stiff hackle → sits high on surface. Minimal weight.'}},
+          {term:{de:'Nymphe',en:'Nymph'}, text:{de:'Schwanz + Körper + Rippung + Thorax + Wing Case + Beine; oft Bead Head für schnelles Sinken.',en:'Tail + body + rib + thorax + wing case + legs; often bead head for fast sink.'}},
+          {term:{de:'Nassfliege / Soft Hackle',en:'Wet fly / soft hackle'}, text:{de:'Schlanker Körper + weiche, zurückgestrichene Hechel → sinkt gleichmäßig & pulsiert im Strom.',en:'Slim body + soft swept-back hackle → sinks evenly & pulses in the current.'}},
+          {term:{de:'Streamer',en:'Streamer'}, text:{de:'Langer Marabou-/Bucktail-Schwanz + Körper + palmered Hechel + Cone/Dumbbell Kopf → imitiert Kleinfische.',en:'Long marabou/bucktail tail + body + palmered hackle + cone/dumbbell head → imitates small fish.'}},
+          {term:{de:'Emerger',en:'Emerger'}, text:{de:'Halb im Film hängend: Schuck + teilweise Körper + Parachute oder CDC-Flügel. Kritischste Phase.',en:'Half-submerged in film: shuck + partial body + parachute or CDC wing. Most critical stage.'}},
+        ]},
       ]},
-      {type:'list', heading:'Hechel-Stile', rows:[
-        {term:'Collar (Catskill)', text:'Mehrere Wraps am Hals → Fasern stehen radial ab, tragen die Trockenfliege.'},
-        {term:'Parachute', text:'Horizontal um den Post gewickelt → liegt flach auf, top Präsentation.'},
-        {term:'Palmering', text:'Hechel spiralig über den Body, mit Gegendraht gesichert (Woolly Bugger, Stimulator).'},
+    ]},
+    { id:'haken', label:{de:'Haken',en:'Hooks'}, nodes:[
+      { id:'haken/anatomy', num:'08', label:{de:'Haken-Anatomie',en:'Hook anatomy'}, svgId:'hook_anatomy', sections:[
+        { heading:{de:'Bauteile des Hakens',en:'Hook components'}, rows:[
+          {term:{de:'Öhr (eye)',en:'Eye'}, text:{de:'Up-Eye (schafft Abstand zur Fliege), Down-Eye (klassisch), Straight-Eye (Streamer, Tube), Looped-Eye (nass).',en:'Up-eye (lifts fly off tippet), down-eye (classic), straight-eye (streamer, tube), looped-eye (wet).'}},
+          {term:{de:'Schenkel (shank)',en:'Shank'}, text:{de:'Baufläche der Fliege. Länge in X long/short angegeben (2XL = 2 Größen länger). Gerade oder gebogen.',en:'Tying area of the fly. Length given in X long/short (2XL = 2 sizes longer). Straight or curved.'}},
+          {term:{de:'Bogen (bend)',en:'Bend'}, text:{de:'Sproat, Limerick, Sneck, Model Perfect, Round — jede Form hat eigene Hakel-Charakteristik.',en:'Sproat, Limerick, Sneck, Model Perfect, Round — each shape has different hooking characteristics.'}},
+          {term:{de:'Spitze & Widerhaken',en:'Point & barb'}, text:{de:'Gerade / Beak / Spear-Spitze. Barbless oder Mikro-Widerhaken = schonendes Lösen ohne Zangenspuren.',en:'Straight / beak / spear point. Barbless or micro-barb = gentle unhooking without plier marks.'}},
+          {term:{de:'Spalt (gap)',en:'Gap'}, text:{de:'Abstand Schenkel–Spitze. Bestimmt die nominelle Hakengröße.',en:'Distance shank–point. Determines the nominal hook size.'}},
+        ]},
+        { heading:{de:'Drahtstärke & Sonderformen',en:'Wire gauge & special shapes'}, rows:[
+          {term:{de:'Drahtstärke',en:'Wire gauge'}, text:{de:'"X fine/heavy" — fein für Trocken (Auftrieb), schwer für Nass/Streamer (Sinkrate & Festigkeit).',en:'"X fine/heavy" — fine for dry (flotation), heavy for wet/streamer (sink rate & strength).'}},
+          {term:{de:'Curved / Klinkhammer',en:'Curved / Klinkhammer'}, text:{de:'Gebogener Schenkel für Nymphen/Emerger; Klinkhammer-Haken: Bogen nach oben, Öhr nach oben.',en:'Curved shank for nymphs/emergers; Klinkhammer hook: bend up, eye up.'}},
+          {term:{de:'Jig-Haken',en:'Jig hook'}, text:{de:'90°-gebogenes Öhr + slotted bead = kopflastig, Spitze oben → hakt selten den Grund.',en:'90°-bent eye + slotted bead = head-heavy, point up → rarely snags the bottom.'}},
+        ]},
       ]},
-      {type:'list', heading:'Dubbing & Körper', rows:[
-        {term:'Granne vs. Unterwolle', text:'Spitze Grannen = buggy, raue Nymphen; feine Unterwolle = dichte, glatte Trockenkörper.'},
-        {term:'Auftrag-Techniken', text:'Touch/Direct (schlanke Bodies), Split-Thread (wenig Bulk, Perdigon), Dubbing-Loop (spikig, maximale Bewegung).'},
-        {term:'Weitere Körper', text:'10–20 % UV/Antron für Reiz beimischen; Quill-Body mit Harz versiegeln; Chenille von Micro bis Estaz.'},
+      { id:'haken/sizes', num:'09', label:{de:'Größensystem',en:'Hook sizes'}, svgId:'hook_sizes', sections:[
+        { heading:{de:'Das Hakengrößen-System',en:'The hook sizing system'}, rows:[
+          {term:{de:'Grundregel',en:'Basic rule'}, text:{de:'Je größer die Zahl, desto kleiner der Haken. #2 ist groß, #28 ist winzig. Meist gerade Zahlen.',en:'The larger the number, the smaller the hook. #2 is large, #28 is tiny. Usually even numbers.'}},
+          {term:{de:'Aught-System (/0)',en:'Aught system (/0)'}, text:{de:'Über #1 hinaus wachsend: 1/0, 2/0, 3/0 ... — für Streamer, Hecht & Salzwasser.',en:'Grows beyond #1: 1/0, 2/0, 3/0 ... — for streamers, pike & saltwater.'}},
+          {term:{de:'X-Long/Short',en:'X-long/short'}, text:{de:'Ändert die Schenkellänge bei gleichem Spalt. 2XL = 2 Größen länger. Für Streamer-Körper.',en:'Changes shank length with same gap. 2XL = 2 sizes longer. For streamer bodies.'}},
+          {term:{de:'Marken-Unterschiede',en:'Brand differences'}, text:{de:'Größen variieren je Marke (TMC/Daiichi/Hanák/Mustad). Immer im Laden testen oder Muster vergleichen.',en:'Sizes vary by brand (TMC/Daiichi/Hanák/Mustad). Always test in-store or compare to reference flies.'}},
+        ]},
+        { heading:{de:'Modelle nach Fliegentyp',en:'Models by fly type'}, rows:[
+          {term:{de:'Trocken',en:'Dry'}, text:{de:'Standard bis 1X-fine, gerade, Down-Eye. TMC 100, Daiichi 1170, Hanák 130.',en:'Standard to 1X-fine, straight, down-eye. TMC 100, Daiichi 1170, Hanák 130.'}},
+          {term:{de:'Nymphe',en:'Nymph'}, text:{de:'Curved oder 1–2XH (heavy); oft Jig + Slotted Bead. TMC 2457, Hanák 230 BL, Daiichi 1120.',en:'Curved or 1–2XH (heavy); often jig + slotted bead. TMC 2457, Hanák 230 BL, Daiichi 1120.'}},
+          {term:{de:'Streamer',en:'Streamer'}, text:{de:'3XL–6XL Langschenkel oder Tubes/Shanks + Stinger-Haken. TMC 5263, Daiichi 2220.',en:'3XL–6XL long shank or tubes/shanks + stinger hook. TMC 5263, Daiichi 2220.'}},
+        ]},
       ]},
-      {type:'list', heading:'Haare & Flügel', rows:[
-        {term:'Hohlhaar (schwimmt)', text:'Reh-Körperhaar (flart 360°, spinnbar — Muddler/Köpfe); Elk (steifer, Caddis-Flügel); Coastal Deer (sauberer Fächer).'},
-        {term:'Gerade Haare', text:'Bucktail (Streamerflügel, sinkt), Calf Tail (kraus, sichtbar — Wulff), Calf Body (saubere Comparadun-Posts).'},
-        {term:'Flügelstellungen', text:'Upright/divided (aufrecht), Spent (liegend — Spinner), Down-wing (Caddis), Parachute-Post.'},
-        {term:'Synthetik & Foam', text:'Poly-Yarn/Antron/EP für Posts & Shuck; Foam (1–6 mm) für unsinkbare Terrestrials; Krystal Flash sparsam.'},
+    ]},
+    { id:'material', label:{de:'Materialien',en:'Materials'}, nodes:[
+      { id:'material/thread', num:'10', label:{de:'Bindefaden',en:'Thread'}, svgId:'', sections:[
+        { heading:{de:'Denier vs. Aught',en:'Denier vs Aught'}, rows:[
+          {term:{de:'Messung',en:'Measurement'}, text:{de:'Aught (8/0, 6/0...) ist herstellerabhängig; Denier (g/9000 m) ist die einzige vergleichbare Größe weltweit.',en:'Aught (8/0, 6/0...) is brand-dependent; denier (g/9000 m) is the only universally comparable measure.'}},
+          {term:{de:'GSP / Dyneema',en:'GSP / Dyneema'}, text:{de:'Max. Reißkraft pro Durchmesser, kaum Dehnung — schneidet Material, Knoten rutschen leichter. Für Saltwater-Muster.',en:'Max breaking strength per diameter, minimal stretch — cuts material, knots slip more easily. For saltwater patterns.'}},
+          {term:{de:'Drall',en:'Twist'}, text:{de:'Bobbin gegen UZS → Faden flacht ab (breitere Wraps); im UZS → rund (mehr Schnittkraft). Wichtig für Schleifen.',en:'Bobbin counter-clockwise → thread flattens (wider wraps); clockwise → round (more cutting force). Important for loops.'}},
+          {term:{de:'Technik',en:'Technique'}, text:{de:'An der Reißgrenze binden → kleinste Köpfe. Spule tief halten = mehr Hebel & Kontrolle.',en:'Tie at breaking point → smallest heads. Hold bobbin low = more leverage & control.'}},
+        ]},
+        { isTable:true, heading:{de:'Aught ↔ Denier Umrechnung',en:'Aught ↔ Denier conversion'}, cols:[{de:'Aught',en:'Aught'},{de:'Denier',en:'Denier'},{de:'Hakengröße',en:'Hook size'},{de:'Einsatz',en:'Use'}], rows:[
+          ['3/0','~280','#1/0–4',{de:'Streamer, Hecht',en:'Streamer, pike'}],
+          ['6/0','~140','#6–12',{de:'Nymphen, Nass, Streamer',en:'Nymphs, wet, streamer'}],
+          ['8/0','~70','#12–18',{de:'Universal: Trocken & Nymphe',en:'Universal: dry & nymph'}],
+          ['10/0','~50','#16–20',{de:'Kleine Trockenfliegen',en:'Small dry flies'}],
+          ['14/0','~30','#18–24',{de:'Midges, Tricos, Mikro',en:'Midges, Tricos, micro'}],
+          ['16/0','~18','#22–28',{de:'Kleinste Muster',en:'Smallest patterns'}],
+        ]},
       ]},
-      {type:'list', heading:'Flash, Rippung & Beschwerung', rows:[
-        {term:'Counter-Wrap', text:'Rippung gegenläufig zur palmered Hechel → fixiert sie bruchsicher; bei Quill/Herl praktisch zwingend.'},
-        {term:'Beschwerung', text:'Tungsten ~2× dichter als Messing → schnellster Sink; Blei für Unterbau, bleifrei wo Pflicht; Putty für variable Tiefe.'},
-        {term:'Flash-Typen', text:'Flashabou (glatt, viel Reflexion), Krystal Flash (bricht Licht), Mirage/Mylar (prismatisch). Dosierung: wenige Fasern reichen.'},
-        {term:'UV', text:'Forellen sehen UV → bei Tiefe/Trübung einsetzen; in klarem Wasser sparsam.'},
+      { id:'material/hackle', num:'11', label:{de:'Federn & Hecheln',en:'Feathers & Hackle'}, svgId:'hackle_anatomy', sections:[
+        { heading:{de:'Cape vs. Saddle',en:'Cape vs Saddle'}, rows:[
+          {term:{de:'Cape (Hahnenkragen)',en:'Cape (cockerel neck)'}, text:{de:'Großes Größenspektrum inkl. #20–28, 1 Feder/Fliege. Für Trockenfliegen mit exakten Proportionen.',en:'Wide size range incl. #20–28, 1 feather/fly. For dry flies with precise proportions.'}},
+          {term:{de:'Saddle (Hahnenrücken)',en:'Saddle (cockerel back)'}, text:{de:'Sehr lange Federn, mehrere Fliegen/Feder. Schmälere Barben. Ideal für Palmering.',en:'Very long feathers, several flies/feather. Narrower barbs. Ideal for palmering.'}},
+          {term:{de:'Trockenhechel',en:'Dry hackle'}, text:{de:'Glänzend, steif, hohe Barb-Dichte. Trägt die Fliege auf der Oberfläche.',en:'Glossy, stiff, high barb density. Supports the fly on the surface.'}},
+          {term:{de:'Henne/CDC (nass)',en:'Hen/CDC (wet)'}, text:{de:'Weich/webbig → Soft Hackle, Beine, Auftrieb durch CDC-Öl. Pulsiert im Strom.',en:'Soft/webby → soft hackle, legs, flotation via CDC oil. Pulses in current.'}},
+        ]},
+        { heading:{de:'Spezialfedern',en:'Special feathers'}, rows:[
+          {term:{de:'Coq de Leon',en:'Coq de Leon'}, text:{de:'Extrem steife, gesprenkelte Fasern für Tails. Imitiert die Cerci der Eintagsfliege perfekt.',en:'Extremely stiff, speckled fibres for tails. Perfectly imitates mayfly cerci.'}},
+          {term:{de:'Rebhuhn (Partridge)',en:'Partridge'}, text:{de:'Weiche, braun-gefleckte Soft-Hackle-Beine. Klassisch für Spider-Nass-Muster.',en:'Soft, brown-spotted soft hackle legs. Classic for spider wet patterns.'}},
+          {term:{de:'Peacock Herl',en:'Peacock herl'}, text:{de:'Irisierender Quill-Body. Zerbrechlich — mit Gegendraht oder Faden sichern.',en:'Iridescent quill body. Fragile — secure with counter-wire or thread.'}},
+          {term:{de:'Biots',en:'Biots'}, text:{de:'Gefieder-Randhaare für segmentierte Körper (Biot Nymphe, Biots Tails).',en:'Primary feather edge fibres for segmented bodies (biot nymph, biot tails).'}},
+          {term:{de:'Grizzly & Dun',en:'Grizzly & Dun'}, text:{de:'Grizzly (schwarz-weiß gestreift, Adams) & Dun (graublau) sind die zwei wichtigsten Töne.',en:'Grizzly (black-white barred, Adams) & dun (grey-blue) are the two most important shades.'}},
+        ]},
+        { heading:{de:'Hechel-Stile',en:'Hackle styles'}, rows:[
+          {term:{de:'Collar (Catskill)',en:'Collar (Catskill)'}, text:{de:'Mehrere Wraps am Hals → Fasern stehen radial ab, tragen die Trockenfliege auf Spitzen.',en:'Several wraps at head → fibres radiate outward, supporting dry fly on tips.'}},
+          {term:{de:'Parachute',en:'Parachute'}, text:{de:'Horizontal um den Post gewickelt → liegt flach auf der Oberfläche, top Präsentation im Oberflächenfilm.',en:'Wound horizontally around post → lies flat on surface, excellent presentation in film.'}},
+          {term:{de:'Palmering',en:'Palmering'}, text:{de:'Hechel spiralig über den Body gewickelt, mit Gegendraht/Rippe gesichert. Woolly Bugger, Stimulator.',en:'Hackle spiralled over body, secured with counter-rib. Woolly Bugger, Stimulator.'}},
+        ]},
       ]},
-      {type:'table', heading:'Bead-Sizing: Perle ↔ Haken', cols:['Hakengröße','Perle Ø','Einsatz'], rows:[
-        ['#20–18','1,5–2,0 mm','Midges, Micro-Nymphen'],
-        ['#16','2,0–2,3 mm','Kleine Nymphen'],
-        ['#14','2,8 mm','Standard-Nymphe'],
-        ['#12','3,3 mm','Mittlere Nymphe'],
-        ['#10','3,8 mm','Große Nymphe'],
-        ['#8–6','4,0–4,6 mm','Streamer, Stonefly'],
+      { id:'material/dubbing', num:'12', label:{de:'Dubbing & Körper',en:'Dubbing & Body'}, svgId:'dubbing', sections:[
+        { heading:{de:'Dubbing-Typen',en:'Dubbing types'}, rows:[
+          {term:{de:'Granne vs. Unterwolle',en:'Guard hairs vs underfur'}, text:{de:'Spitze Grannen = buggy, raue Nymphen (Hare\'s Ear). Feine Unterwolle = dichte, glatte Trockenkörper.',en:'Guard hairs = buggy, rough nymphs (Hare\'s Ear). Fine underfur = dense, smooth dry fly bodies.'}},
+          {term:{de:'Synthetik',en:'Synthetic'}, text:{de:'10–20 % UV/Antron für Reiz beimischen; SLF, Ice Dub für Flash-Effekt. Gleichmäßige Körper.',en:'Add 10–20 % UV/Antron for trigger; SLF, Ice Dub for flash effect. Even bodies.'}},
+          {term:{de:'Auftrag-Techniken',en:'Application techniques'}, text:{de:'Touch/Direct (schlanke Bodies), Split-Thread/Dubbing Split (wenig Bulk, Perdigon-Stil), Dubbing-Loop (spikig, maximale Bewegung).',en:'Touch/direct (slim bodies), split-thread/dubbing split (low bulk, Perdigon-style), dubbing loop (spiky, maximum movement).'}},
+        ]},
+        { heading:{de:'Weitere Körpermaterialien',en:'Other body materials'}, rows:[
+          {term:{de:'Quill-Body',en:'Quill body'}, text:{de:'Gestrippte Pfauenquill oder Biot — sehr dünner, segmentierter Körper. Unbedingt mit UV-Harz versiegeln.',en:'Stripped peacock quill or biot — very slim, segmented body. Always seal with UV resin.'}},
+          {term:{de:'Chenille',en:'Chenille'}, text:{de:'Von Micro bis Estaz. Schnell, robust, aber voluminös. Für Woolly Bugger, Streamer.',en:'From micro to Estaz. Fast, durable, but bulky. For Woolly Bugger, streamers.'}},
+          {term:{de:'Floss & Tinsel',en:'Floss & tinsel'}, text:{de:'Floss = seidig-glatte Abdomen (classic wet). Tinsel (Flat/Oval) = Reflexion für Streamer-Körper.',en:'Floss = silky-smooth abdomen (classic wet). Tinsel (flat/oval) = reflection for streamer bodies.'}},
+        ]},
       ]},
-      {type:'table', heading:'Drahtgrößen ↔ Haken', cols:['Draht','Ø ca.','Hakengröße'], rows:[
-        ['UTC XSM','~0,10 mm','#20–18, Mikro'],
-        ['UTC SM','~0,15 mm','#18–14, feine Rib'],
-        ['UTC Brassie','~0,20 mm','#14–10, Standard-Rib'],
-        ['UTC MED–LG','0,30–0,40 mm','#10–2, Streamer'],
-        ['Bleidraht .010–.015"','0,25–0,40 mm','#16–8, Unterbau'],
-        ['Bleidraht .020–.025"','0,50–0,65 mm','#8–2 schwer'],
+      { id:'material/hair', num:'13', label:{de:'Haare & Flügel',en:'Hair & Wings'}, svgId:'wing_styles', sections:[
+        { heading:{de:'Hohlhaar (schwimmt)',en:'Hollow hair (floats)'}, rows:[
+          {term:{de:'Reh-Körperhaar (Deer Body)',en:'Deer body hair'}, text:{de:'Hohl, flärt 360° beim Binden und lässt sich spinnen (Muddler-Köpfe, Deer Hair Bugs). Sehr schwimmfähig.',en:'Hollow, flares 360° when tied and can be spun (Muddler heads, Deer Hair Bugs). Highly buoyant.'}},
+          {term:{de:'Elk (Elch)',en:'Elk'}, text:{de:'Steifer als Reh, flärt weniger. Ideal für Caddis-Flügel (Elk Hair Caddis), Caddis-Körper.',en:'Stiffer than deer, less flare. Ideal for caddis wings (Elk Hair Caddis), caddis bodies.'}},
+          {term:{de:'Coastal Deer',en:'Coastal deer'}, text:{de:'Feine, gerade Spitzen — sauberster Fächer-/Comparadun-Flügel. Weniger Fläre.',en:'Fine, straight tips — cleanest fan/Comparadun wing. Less flare.'}},
+        ]},
+        { heading:{de:'Gerade Haare (sinken)',en:'Straight hair (sinks)'}, rows:[
+          {term:{de:'Bucktail',en:'Bucktail'}, text:{de:'Streamerflügel, sinkt. Wellen-/Pulsbewegung im Wasser. In allen Farben erhältlich.',en:'Streamer wing, sinks. Wave/pulse movement in water. Available in all colours.'}},
+          {term:{de:'Calf Tail (Kalbsschwanz)',en:'Calf tail'}, text:{de:'Kraus/gewellt, sehr sichtbar — Wulff-Flügel, Trude. Schlecht für exakte Teilung.',en:'Crinkly/wavy, very visible — Wulff wings, Trude. Poor for precise division.'}},
+          {term:{de:'Calf Body',en:'Calf body'}, text:{de:'Fein, gerade, wenig Bulk — saubere Comparadun-Posts, Spinner-Flügel.',en:'Fine, straight, low bulk — clean Comparadun posts, spinner wings.'}},
+        ]},
+        { heading:{de:'Flügelstellungen & Synthetik',en:'Wing positions & synthetic'}, rows:[
+          {term:{de:'Positionen',en:'Positions'}, text:{de:'Upright/divided (Trocken), Spent (Spinner liegend), Down-wing (Caddis-Dach), Parachute-Post, Streamer.',en:'Upright/divided (dry), spent (spinner flat), down-wing (caddis roof), parachute post, streamer.'}},
+          {term:{de:'Synthetik & Foam',en:'Synthetic & foam'}, text:{de:'Poly-Yarn/Antron/EP für Posts & Shuck; Foam (1–6 mm) für unsinkbare Terrestrials.',en:'Poly-Yarn/Antron/EP for posts & shuck; foam (1–6 mm) for unsinkable terrestrials.'}},
+        ]},
+      ]},
+      { id:'material/flash', num:'14', label:{de:'Flash & Gewicht',en:'Flash & Weight'}, svgId:'', sections:[
+        { heading:{de:'Flash-Typen',en:'Flash types'}, rows:[
+          {term:{de:'Flashabou',en:'Flashabou'}, text:{de:'Glatt, viel Reflexion, wenig Torsion. Schöne lange Fasern für Streamer-Schwänze.',en:'Smooth, high reflection, minimal twist. Beautiful long fibres for streamer tails.'}},
+          {term:{de:'Krystal Flash',en:'Krystal Flash'}, text:{de:'Bricht Licht durch Torsion — funkelt anders als Flashabou. Sparsam dosieren: 2–4 Fasern reichen.',en:'Breaks light through twist — sparkles differently to Flashabou. Use sparingly: 2–4 fibres suffice.'}},
+          {term:{de:'Mirage/Mylar',en:'Mirage/Mylar'}, text:{de:'Prismatisch, Regenbogeneffekt. Für Saltwater-Muster und Streamer-Rib.',en:'Prismatic, rainbow effect. For saltwater patterns and streamer ribs.'}},
+          {term:{de:'Counter-Wrap',en:'Counter-wrap'}, text:{de:'Rippung gegenläufig zur palmered Hechel → fixiert sie bruchsicher. Bei Quill/Herl praktisch zwingend.',en:'Rib counter-direction to palmered hackle → locks it securely. Practically mandatory with quill/herl.'}},
+        ]},
+        { heading:{de:'Beschwerung',en:'Weight'}, rows:[
+          {term:{de:'Tungsten',en:'Tungsten'}, text:{de:'~2× dichter als Messing → schnellster Sink. Schwarz/Gold/Kupfer/Silber. Slotted für Jig-Haken.',en:'~2× denser than brass → fastest sink. Black/gold/copper/silver. Slotted for jig hooks.'}},
+          {term:{de:'Blei-Unterbau',en:'Lead underbody'}, text:{de:'Bleidraht spiralförmig als Körper-Unterbau. Bleifrei wo gesetzlich vorgeschrieben.',en:'Lead wire spiralled as body underbody. Lead-free where legally required.'}},
+          {term:{de:'UV-Harz',en:'UV resin'}, text:{de:'Forellen sehen UV → bei Tiefe/Trübung einsetzen. In klarem flachen Wasser sparsam.',en:'Trout see UV → use in depth/turbidity. Use sparingly in clear shallow water.'}},
+        ]},
+        { isTable:true, heading:{de:'Bead-Sizing: Perle ↔ Haken',en:'Bead sizing: bead ↔ hook'}, cols:[{de:'Hakengröße',en:'Hook size'},{de:'Perle Ø',en:'Bead Ø'},{de:'Einsatz',en:'Use'}], rows:[
+          ['#20–18','1,5–2,0 mm',{de:'Midges, Micro-Nymphen',en:'Midges, micro nymphs'}],
+          ['#16','2,0–2,3 mm',{de:'Kleine Nymphen',en:'Small nymphs'}],
+          ['#14','2,8 mm',{de:'Standard-Nymphe',en:'Standard nymph'}],
+          ['#12','3,3 mm',{de:'Mittlere Nymphe',en:'Medium nymph'}],
+          ['#10','3,8 mm',{de:'Große Nymphe',en:'Large nymph'}],
+          ['#8–6','4,0–4,6 mm',{de:'Streamer, Stonefly',en:'Streamer, stonefly'}],
+        ]},
       ]},
     ]},
   ];
+
+  QUIZ_BANK = [
+    {q:{de:'Wie halten Eintagsfliegen ihre Flügel in der Ruhestellung?',en:'How do mayflies hold their wings at rest?'}, options:[{t:{de:'Steil aufrecht wie ein Segel',en:'Upright like a sail'},c:true},{t:{de:'Flach auf dem Rücken',en:'Flat on their back'},c:false},{t:{de:'Zeltförmig über dem Körper',en:'Tent-like over the body'},c:false},{t:{de:'Seitlich ausgestreckt',en:'Spread sideways'},c:false}], expl:{de:'Eintagsfliegen (Ephemeroptera) halten ihre Flügel steil aufrecht wie ein Segel — sie können sie nicht flach legen. Das ist ihr wichtigstes Erkennungsmerkmal.',en:'Mayflies (Ephemeroptera) hold their wings upright like a sail — they cannot fold them flat. This is their most important identification feature.'}},
+    {q:{de:'Wie viele Schwanzfäden (Cerci) haben Eintagsfliegen typischerweise?',en:'How many tails (cerci) do mayflies typically have?'}, options:[{t:{de:'2–3 lange, feine Fäden',en:'2–3 long, fine filaments'},c:true},{t:{de:'Genau 2 kurze, dicke Cerci',en:'Exactly 2 short, thick cerci'},c:false},{t:{de:'Keine Schwanzfäden',en:'No tails at all'},c:false},{t:{de:'Einen einzelnen, langen Faden',en:'A single long filament'},c:false}], expl:{de:'Eintagsfliegen haben 2–3 extrem lange, feine Cerci. Steinfliegen dagegen haben genau 2 kurze, dicke Cerci.',en:'Mayflies have 2–3 extremely long, fine cerci. Stoneflies by contrast have exactly 2 short, thick cerci.'}},
+    {q:{de:'Welches Insekt hat als einziges zwei geflügelte Entwicklungsstadien?',en:'Which insect uniquely has two winged life stages?'}, options:[{t:{de:'Eintagsfliegen (Ephemeroptera)',en:'Mayflies (Ephemeroptera)'},c:true},{t:{de:'Köcherfliegen (Trichoptera)',en:'Caddis flies (Trichoptera)'},c:false},{t:{de:'Steinfliegen (Plecoptera)',en:'Stoneflies (Plecoptera)'},c:false},{t:{de:'Mücken (Diptera)',en:'Midges (Diptera)'},c:false}], expl:{de:'Eintagsfliegen durchlaufen als einzige Insekten zwei geflügelte Stadien: Dun (Subimago) und Spinner (Imago).',en:'Mayflies are the only insects that undergo two winged stages: dun (subimago) and spinner (imago).'}},
+    {q:{de:'Wie falten Köcherfliegen ihre Flügel in der Ruhestellung?',en:'How do caddis flies fold their wings at rest?'}, options:[{t:{de:'Dach- bzw. zeltförmig über dem Körper',en:'Roof- or tent-shaped over the body'},c:true},{t:{de:'Steil aufrecht wie ein Segel',en:'Upright like a sail'},c:false},{t:{de:'Völlig flach auf dem Rücken',en:'Completely flat on the back'},c:false},{t:{de:'Seitlich wie ein Schmetterling',en:'Spread sideways like a butterfly'},c:false}], expl:{de:'Köcherfliegen (Trichoptera) falten ihre Flügel dach- oder zeltförmig über dem Hinterleib.',en:'Caddis flies (Trichoptera) fold their wings roof- or tent-shaped over the abdomen.'}},
+    {q:{de:'Was unterscheidet Köcherfliegen von Eintagsfliegen auf den ersten Blick?',en:'What immediately distinguishes caddis from mayflies?'}, options:[{t:{de:'Keine Schwanzfäden und sehr lange Fühler',en:'No tails and very long antennae'},c:true},{t:{de:'Nur 2 Flügel statt 4',en:'Only 2 wings instead of 4'},c:false},{t:{de:'Aufrechte Flügelhaltung',en:'Upright wing posture'},c:false},{t:{de:'Behaarter Thorax',en:'Hairy thorax'},c:false}], expl:{de:'Köcherfliegen haben KEINE Schwanzfäden und sehr lange, nach vorn gestreckte Fühler. Eintagsfliegen haben 2–3 lange Cerci.',en:'Caddis flies have NO tails and very long, forward-pointing antennae. Mayflies have 2–3 long cerci.'}},
+    {q:{de:'Wie legen Steinfliegen ihre Flügel in der Ruhe?',en:'How do stoneflies position their wings at rest?'}, options:[{t:{de:'Völlig flach parallel auf dem Rücken',en:'Completely flat and parallel on the back'},c:true},{t:{de:'Steil aufrecht wie ein Segel',en:'Upright like a sail'},c:false},{t:{de:'Zeltförmig über dem Körper',en:'Tent-shaped over the body'},c:false},{t:{de:'Nur ein Flügelpaar sichtbar',en:'Only one wing pair visible'},c:false}], expl:{de:'Steinfliegen (Plecoptera) legen ihre Flügel völlig flach und parallel auf den Rücken — wie Hubschrauber-Rotoren.',en:'Stoneflies (Plecoptera) lay their wings completely flat and parallel on the back — like helicopter rotors.'}},
+    {q:{de:'Was zeigt das Vorkommen von Steinfliegen über die Wasserqualität?',en:'What does the presence of stoneflies indicate about water quality?'}, options:[{t:{de:'Eiskaltes, sauerstoffreiches, sauberes Wasser',en:'Ice-cold, oxygen-rich, clean water'},c:true},{t:{de:'Warmes, nährstoffreiches Wasser',en:'Warm, nutrient-rich water'},c:false},{t:{de:'Leicht verschmutztes Wasser',en:'Slightly polluted water'},c:false},{t:{de:'Stehendes Wasser',en:'Still water'},c:false}], expl:{de:'Steinfliegen sind Bioindikatoren für hervorragende Wasserqualität. Ihr Fehlen weist auf Verschmutzung hin.',en:'Stoneflies are bioindicators for excellent water quality. Their absence indicates pollution.'}},
+    {q:{de:'Wie viele Flügel haben Mücken (Diptera)?',en:'How many wings do midges (Diptera) have?'}, options:[{t:{de:'Nur 2 Flügel — Hinterflügel zu Halteren verkümmert',en:'Only 2 wings — hindwings reduced to halteres'},c:true},{t:{de:'4 Flügel wie alle anderen Fliegen',en:'4 wings like all other flies'},c:false},{t:{de:'3 Flügel (ein Hinterflügel fehlt)',en:'3 wings (one hindwing missing)'},c:false},{t:{de:'Gar keine Flügel',en:'No wings at all'},c:false}], expl:{de:'Diptera (Zweiflügler) haben nur 2 Flügel. Die Hinterflügel sind zu Halteren (Schwingkölbchen) verkümmert — einzigartiges Merkmal dieser Ordnung.',en:'Diptera (two-winged flies) have only 2 wings. The hindwings are reduced to halteres (balance organs) — a unique feature of this order.'}},
+    {q:{de:'Bei welcher Temperatur können Midges noch schlüpfen?',en:'At what temperature can midges still hatch?'}, options:[{t:{de:'Selbst bei 2°C im Winter',en:'Even at 2°C in winter'},c:true},{t:{de:'Erst ab 15°C',en:'Only above 15°C'},c:false},{t:{de:'Nur bei 10–20°C',en:'Only between 10–20°C'},c:false},{t:{de:'Nie unter 5°C',en:'Never below 5°C'},c:false}], expl:{de:'Midges (Chironomidae) schlüpfen selbst im Winter bei 2°C und sind daher ganzjährig relevant — besonders für Winterfischer.',en:'Midges (Chironomidae) hatch even in winter at 2°C and are therefore relevant year-round — especially for winter anglers.'}},
+    {q:{de:'In welcher Phase hängt die Mücken-Puppe oft stundenlang im Oberflächenfilm?',en:'In which stage does the midge pupa hang motionless in the surface film for hours?'}, options:[{t:{de:'Kurz vor dem Schlupf als Adulte',en:'Just before emerging as adult'},c:true},{t:{de:'Als frisch geschlüpfte Imago',en:'As freshly emerged adult'},c:false},{t:{de:'Als Larve beim Aufsteigen',en:'As larva while ascending'},c:false},{t:{de:'Nach der Eiablage',en:'After egg-laying'},c:false}], expl:{de:'Die Mücken-Puppe hängt kurz vor dem Schlupf oft stundenlang regungslos im Oberflächenfilm — leichte Beute für Fische.',en:'The midge pupa hangs motionless in the surface film for hours just before emerging — easy prey for fish.'}},
+    {q:{de:'Was ist der "Kopfreserve" beim Fliegenbinden?',en:'What is the "head space" in fly tying?'}, options:[{t:{de:'Die letzten 10–15 % des Schenkels frei halten',en:'Keeping the last 10–15 % of the shank clear'},c:true},{t:{de:'Den Hakenspalt freilassen',en:'Keeping the hook gap clear'},c:false},{t:{de:'Platz für den Schwanz',en:'Space for the tail'},c:false},{t:{de:'Die Federwurzel frei lassen',en:'Keeping the feather root clear'},c:false}], expl:{de:'Die Kopfreserve bedeutet, die letzten 10–15 % des Schenkels (beim Öhr) für den Fadenabschluss frei zu lassen.',en:'Head space means keeping the last 10–15 % of the shank (near the eye) clear for the thread finish.'}},
+    {q:{de:'Was bedeutet "Counter-Wrap" beim Fliegenbinden?',en:'What does "counter-wrap" mean in fly tying?'}, options:[{t:{de:'Rippung gegenläufig zur Hechel wickeln',en:'Winding rib in opposite direction to hackle'},c:true},{t:{de:'Faden gegenläufig zum Uhrzeigersinn wickeln',en:'Winding thread counter-clockwise'},c:false},{t:{de:'Zweimal über dieselbe Stelle wickeln',en:'Wrapping twice over the same spot'},c:false},{t:{de:'Körper von vorne nach hinten binden',en:'Tying body from front to back'},c:false}], expl:{de:'Counter-Wrap bedeutet, die Rippung gegenläufig zur palmered Hechel über den Body zu wickeln — so wird die Hechel bruchsicher fixiert.',en:'Counter-wrap means winding the rib in the opposite direction to a palmered hackle — this locks the hackle securely against breakage.'}},
+    {q:{de:'Was ist der Unterschied zwischen einem Cape und einem Saddle beim Hackle?',en:'What is the difference between a cape and a saddle for hackle?'}, options:[{t:{de:'Cape: viele Größen, 1 Feder/Fliege. Saddle: lange Federn, mehrere Fliegen/Feder',en:'Cape: many sizes, 1 feather/fly. Saddle: long feathers, several flies/feather'},c:true},{t:{de:'Cape kommt von der Henne, Saddle vom Hahn',en:'Cape from hen, saddle from cockerel'},c:false},{t:{de:'Saddle ist weicher und für Nassfliegen',en:'Saddle is softer and for wet flies'},c:false},{t:{de:'Cape hat kürzere Federn für Midges',en:'Cape has shorter feathers for midges'},c:false}], expl:{de:'Cape (Hahnenkragen) deckt viele Größen ab inkl. #20–28, 1 Feder/Fliege. Saddle (Hahnenrücken) hat sehr lange Federn für mehrere Fliegen und ist ideal zum Palmern.',en:'Cape (cockerel neck) covers many sizes incl. #20–28, 1 feather/fly. Saddle (cockerel back) has very long feathers for several flies and is ideal for palmering.'}},
+    {q:{de:'Welcher Faden-Typ hat die höchste Reißkraft bei geringstem Durchmesser?',en:'Which thread type has the highest breaking strength per diameter?'}, options:[{t:{de:'GSP / Dyneema',en:'GSP / Dyneema'},c:true},{t:{de:'Polyester (6/0)',en:'Polyester (6/0)'},c:false},{t:{de:'Nylon (8/0)',en:'Nylon (8/0)'},c:false},{t:{de:'Seide (14/0)',en:'Silk (14/0)'},c:false}], expl:{de:'GSP (Gel-Spun Polyethylene) / Dyneema hat die höchste Reißkraft pro Durchmesser, dehnt sich kaum, schneidet aber Material leichter.',en:'GSP (Gel-Spun Polyethylene) / Dyneema has the highest breaking strength per diameter, barely stretches, but cuts material more easily.'}},
+    {q:{de:'Was ist Denier als Maßeinheit für Bindegarn?',en:'What is denier as a unit for tying thread?'}, options:[{t:{de:'Gramm pro 9000 Meter Fadenlänge',en:'Grams per 9000 metres of thread'},c:true},{t:{de:'Anzahl der Einzelfasern',en:'Number of individual fibres'},c:false},{t:{de:'Fadendicke in Millimetern',en:'Thread diameter in millimetres'},c:false},{t:{de:'Reißkraft in Newton',en:'Breaking force in Newtons'},c:false}], expl:{de:'Denier = Gramm pro 9000 Meter Fadenlänge. Im Gegensatz zur herstellerabhängigen Aught-Skala ist Denier ein universell vergleichbares Maß.',en:'Denier = grams per 9000 metres of thread. Unlike the brand-dependent aught scale, denier is a universally comparable measure.'}},
+    {q:{de:'Welches Bead-Material sinkt am schnellsten?',en:'Which bead material sinks fastest?'}, options:[{t:{de:'Tungsten (Wolfram)',en:'Tungsten'},c:true},{t:{de:'Messing (Brass)',en:'Brass'},c:false},{t:{de:'Glas',en:'Glass'},c:false},{t:{de:'Kunststoff',en:'Plastic'},c:false}], expl:{de:'Tungsten ist ca. 2× dichter als Messing und sinkt daher viel schneller. Ideal für Nymphen in tiefen, schnellen Gewässern.',en:'Tungsten is approximately 2× denser than brass and therefore sinks much faster. Ideal for nymphs in deep, fast water.'}},
+    {q:{de:'Was ist der Vorteil eines Jig-Hakens mit Slotted Bead?',en:'What is the advantage of a jig hook with slotted bead?'}, options:[{t:{de:'Kopflastig + Spitze oben → hakt selten den Grund',en:'Head-heavy + point up → rarely snags the bottom'},c:true},{t:{de:'Schnelleres Sinken durch Aerodynamik',en:'Faster sinking due to aerodynamics'},c:false},{t:{de:'Bessere Farbe durch Tungsten',en:'Better colour from tungsten'},c:false},{t:{de:'Einfachere Baureihenfolge',en:'Simpler tying sequence'},c:false}], expl:{de:'Jig-Haken mit Slotted Bead macht die Fliege kopflastig, sodass die Hakenspitze nach oben zeigt — das verhindert Grundhänger drastisch.',en:'A jig hook with slotted bead makes the fly head-heavy so the hook point faces up — this drastically reduces bottom snags.'}},
+    {q:{de:'Was bedeutet die Bezeichnung "2XL" bei einem Haken?',en:'What does the designation "2XL" mean for a hook?'}, options:[{t:{de:'Schenkel ist 2 Größen länger bei gleichem Spalt',en:'Shank is 2 sizes longer with the same gap'},c:true},{t:{de:'Draht ist 2× dicker als normal',en:'Wire is 2× thicker than normal'},c:false},{t:{de:'Spalt ist 2× breiter als normal',en:'Gap is 2× wider than normal'},c:false},{t:{de:'Haken hat 2 Widerhaken',en:'Hook has 2 barbs'},c:false}], expl:{de:'2XL bedeutet: Der Schenkel ist so lang wie beim nächstgrößeren Haken (2 Größen), aber der Spalt bleibt gleich. Für längere Körper (Streamer, Stonefly-Nymphen).',en:'2XL means: the shank is as long as the next 2 sizes larger, but the gap stays the same. For longer bodies (streamers, stonefly nymphs).'}},
+    {q:{de:'Was ist das Größensystem bei Fliegenhaken?',en:'What is the sizing system for fly hooks?'}, options:[{t:{de:'Größere Zahl = kleinerer Haken (#2 groß, #28 winzig)',en:'Larger number = smaller hook (#2 large, #28 tiny)'},c:true},{t:{de:'Größere Zahl = größerer Haken',en:'Larger number = larger hook'},c:false},{t:{de:'Größe in Millimetern angegeben',en:'Size given in millimetres'},c:false},{t:{de:'Buchstaben (XS/S/M/L/XL)',en:'Letters (XS/S/M/L/XL)'},c:false}], expl:{de:'Bei Fliegenhaken gilt: Je größer die Zahl, desto kleiner der Haken. #2 ist groß (Streamer), #28 ist winzig (Midge). Das Aught-System (/0) geht oberhalb von #1 weiter.',en:'For fly hooks: the larger the number, the smaller the hook. #2 is large (streamer), #28 is tiny (midge). The aught system (/0) continues above #1.'}},
+    {q:{de:'Welche Trockenhechel-Faserlänge ist korrekt?',en:'What is the correct dry hackle fibre length?'}, options:[{t:{de:'≈ 1,5–2× Hakenspalt',en:'≈ 1.5–2× hook gap'},c:true},{t:{de:'≈ Schenkellänge',en:'≈ shank length'},c:false},{t:{de:'≈ Hakenlänge gesamt',en:'≈ total hook length'},c:false},{t:{de:'≈ 3–4× Hakenspalt',en:'≈ 3–4× hook gap'},c:false}], expl:{de:'Die Trockenhechel-Faser sollte ca. 1,5–2× den Hakenspalt (Gap) messen. Mit einem Hackle-Gauge prüfen.',en:'The dry hackle fibre should measure approximately 1.5–2× the hook gap. Check with a hackle gauge.'}},
+    {q:{de:'Was ist der Unterschied zwischen Grizzly und Dun beim Hechel?',en:'What is the difference between grizzly and dun hackle?'}, options:[{t:{de:'Grizzly: schwarz-weiß gestreift. Dun: graublau.',en:'Grizzly: black-white barred. Dun: grey-blue.'},c:true},{t:{de:'Grizzly: von der Henne. Dun: vom Hahn.',en:'Grizzly: from hen. Dun: from cockerel.'},c:false},{t:{de:'Grizzly: braun-oliv. Dun: schwarz.',en:'Grizzly: brown-olive. Dun: black.'},c:false},{t:{de:'Grizzly: Cape. Dun: Saddle.',en:'Grizzly: cape. Dun: saddle.'},c:false}], expl:{de:'Grizzly = schwarz-weiß gebänderte/gestreifte Hechel (Adams!). Dun = graublaue Farbe, imitiert die häufigste Ephemeroptera-Körperfarbe.',en:'Grizzly = black-white barred/banded hackle (Adams!). Dun = grey-blue colour, imitates the most common Ephemeroptera body colour.'}},
+    {q:{de:'Was ist "Palmering" beim Fliegenbinden?',en:'What is "palmering" in fly tying?'}, options:[{t:{de:'Hechel spiralig über den Body wickeln',en:'Hackle spiralled over the body'},c:true},{t:{de:'Mehrere Wraps am Kopf',en:'Multiple wraps at the head'},c:false},{t:{de:'Hechel horizontal um einen Post',en:'Hackle wound horizontally around a post'},c:false},{t:{de:'Hechel von hinten nach vorne',en:'Hackle from back to front'},c:false}], expl:{de:'Palmering = Hechel spiralig über den gesamten Body wickeln (z.B. Woolly Bugger, Stimulator). Mit Counter-Wrap/Rippe sichern.',en:'Palmering = hackle spiralled over the entire body (e.g. Woolly Bugger, Stimulator). Secure with counter-wrap/rib.'}},
+    {q:{de:'Was ist der Vorteil der Parachute-Hechelbindung?',en:'What is the advantage of the parachute hackle style?'}, options:[{t:{de:'Liegt flach auf der Oberfläche — beste Präsentation im Oberflächenfilm',en:'Lies flat on the surface — best presentation in the film'},c:true},{t:{de:'Mehr Auftrieb durch radiale Anordnung',en:'More flotation from radial arrangement'},c:false},{t:{de:'Stärkere Fixierung des Körpers',en:'Stronger fixation of the body'},c:false},{t:{de:'Schnelleres Binden als Collar',en:'Faster to tie than collar'},c:false}], expl:{de:'Die Parachute-Hechel wird horizontal um einen Post gewickelt und liegt dann flach auf der Oberfläche. Optimale Präsentation im Oberflächenfilm, Fisch sieht natürliches Bild.',en:'The parachute hackle is wound horizontally around a post and lies flat on the surface. Optimal presentation in the surface film; fish sees a natural image.'}},
+    {q:{de:'Welches Haar "flärt" beim Binden und lässt sich für Muddler-Köpfe spinnen?',en:'Which hair "flares" when tied and can be spun for Muddler heads?'}, options:[{t:{de:'Reh-Körperhaar (Deer Body Hair)',en:'Deer body hair'},c:true},{t:{de:'Bucktail',en:'Bucktail'},c:false},{t:{de:'Calf Tail',en:'Calf tail'},c:false},{t:{de:'Elk',en:'Elk'},c:false}], expl:{de:'Reh-Körperhaar ist hohl und flärt beim Binden 360° radial ab. Es lässt sich spinnen und scheren (Muddler-Köpfe, Deer Hair Bugs).',en:'Deer body hair is hollow and flares 360° radially when tied. It can be spun and trimmed (Muddler heads, Deer Hair Bugs).'}},
+    {q:{de:'Welche Dubbing-Technik erzeugt den spikigsten, lebendigsten Körper?',en:'Which dubbing technique creates the spikiest, most lifelike body?'}, options:[{t:{de:'Dubbing-Loop',en:'Dubbing loop'},c:true},{t:{de:'Touch/Direct dubbing',en:'Touch/direct dubbing'},c:false},{t:{de:'Split-Thread Dubbing',en:'Split-thread dubbing'},c:false},{t:{de:'Chenille',en:'Chenille'},c:false}], expl:{de:'Der Dubbing-Loop erzeugt durch die gedrehte Schleife maximale Bewegung und Spikyness. Touch dubbing gibt schlankere, glattere Bodies.',en:'The dubbing loop creates maximum movement and spikiness through the twisted loop. Touch dubbing gives slimmer, smoother bodies.'}},
+    {q:{de:'Was imitiert eine "Spent Spinner"-Fliege?',en:'What does a "spent spinner" fly imitate?'}, options:[{t:{de:'Die tote Eintagsfliege mit ausgebreiteten Flügeln auf der Oberfläche',en:'The dead mayfly with spread wings on the surface'},c:true},{t:{de:'Die Puppe der Köcherfliege kurz vor dem Schlupf',en:'The caddis pupa just before emergence'},c:false},{t:{de:'Eine treibende Nymphe',en:'A drifting nymph'},c:false},{t:{de:'Die aktiv schwimmende Larve',en:'The actively swimming larva'},c:false}], expl:{de:'Nach dem Paarungsflug fällt die Imago (Spinner) erschöpft mit flach ausgebreiteten Flügeln auf die Oberfläche — Spent Spinner. Oft der wichtigste Abendschlupf.',en:'After the mating flight the imago (spinner) falls exhausted with wings spread flat on the surface — spent spinner. Often the most important evening rise.'}},
+    {q:{de:'Was ist der Unterschied zwischen Elk Hair und Deer Body Hair?',en:'What is the difference between elk hair and deer body hair?'}, options:[{t:{de:'Elk ist steifer und flärt weniger als Deer Body Hair',en:'Elk is stiffer and flares less than deer body hair'},c:true},{t:{de:'Elk ist weicher und für Wet Flies',en:'Elk is softer and for wet flies'},c:false},{t:{de:'Elk sinkt, Deer schwimmt nicht',en:'Elk sinks, deer does not float'},c:false},{t:{de:'Kein wesentlicher Unterschied',en:'No significant difference'},c:false}], expl:{de:'Elk-Haar ist steifer und flärt weniger als Reh-Körperhaar. Ideal für Elk Hair Caddis-Flügel, die halten sollen. Reh-Körperhaar flärt stärker für Muddler-Köpfe.',en:'Elk hair is stiffer and flares less than deer body hair. Ideal for Elk Hair Caddis wings that need to hold. Deer body hair flares more for Muddler heads.'}},
+    {q:{de:'Was ist Coq de Leon Hackle besonders geeignet für?',en:'What is Coq de Leon hackle particularly suited for?'}, options:[{t:{de:'Steife, gesprenkelte Tails — imitiert Cerci der Eintagsfliege',en:'Stiff, speckled tails — imitates mayfly cerci'},c:true},{t:{de:'Palmered Body-Hechel',en:'Palmered body hackle'},c:false},{t:{de:'Parachute-Posts',en:'Parachute posts'},c:false},{t:{de:'Soft Hackle Beine',en:'Soft hackle legs'},c:false}], expl:{de:'Coq de Leon Federn haben extrem steife, gesprenkelte Fasern — ideal für Mayfly-Tails (Cerci-Imitation). Eines der besten natürlichen Tail-Materialien.',en:'Coq de Leon feathers have extremely stiff, speckled fibres — ideal for mayfly tails (cerci imitation). One of the best natural tail materials.'}},
+    {q:{de:'Warum beginnt man beim Fliegenbinden von hinten nach vorne?',en:'Why does fly tying proceed from back to front?'}, options:[{t:{de:'Jeder Schritt verdeckt den Ansatz des vorherigen → saubererer Aufbau',en:'Each step covers the tie-in of the previous → cleaner construction'},c:true},{t:{de:'Der Haken hält besser wenn man hinten beginnt',en:'Hook holds better when starting at the back'},c:false},{t:{de:'Traditionelle Reihenfolge ohne technischen Grund',en:'Traditional order with no technical reason'},c:false},{t:{de:'Damit das Öhr frei bleibt',en:'So the eye stays clear'},c:false}], expl:{de:'Von hinten nach vorne binden bedeutet: jeder neue Materialansatz verdeckt den vorherigen — das ergibt einen schlanken, sauberen Körper ohne sichtbare Übergänge.',en:'Tying back to front means: each new material tie-in covers the previous one — this gives a slim, clean body with no visible transitions.'}},
+    {q:{de:'Was ist Flash-Dosierung beim Fliegenbinden?',en:'What is the correct flash dosage in fly tying?'}, options:[{t:{de:'Sparsam: 2–4 Fasern reichen meist völlig',en:'Sparingly: 2–4 fibres are usually completely sufficient'},c:true},{t:{de:'So viel wie möglich für maximale Attraktion',en:'As much as possible for maximum attraction'},c:false},{t:{de:'Flash nur bei Streamer, nie bei Nymphen',en:'Flash only in streamers, never nymphs'},c:false},{t:{de:'Mindestens 10–15 Fasern pro Seite',en:'At least 10–15 fibres per side'},c:false}], expl:{de:'Flash ist ein Trigger, kein Hauptmaterial. 2–4 Fasern Krystal Flash oder Flashabou reichen — zu viel Flash macht die Fliege unnatürlich.',en:'Flash is a trigger, not a main material. 2–4 fibres of Krystal Flash or Flashabou suffice — too much flash makes the fly unnatural.'}},
+    {q:{de:'Welches Muster imitiert am besten die pulsierend aktive Mücken-Puppe im Oberflächenfilm?',en:'Which pattern best imitates the midge pupa suspended in the surface film?'}, options:[{t:{de:'Zebra Midge / Shipman\'s Buzzer',en:'Zebra Midge / Shipman\'s Buzzer'},c:true},{t:{de:'Griffith\'s Gnat',en:'Griffith\'s Gnat'},c:false},{t:{de:'Bloodworm',en:'Bloodworm'},c:false},{t:{de:'Black Gnat (Trocken)',en:'Black Gnat (dry)'},c:false}], expl:{de:'Der Zebra Midge und Shipman\'s Buzzer imitieren die Puppe hängend im Oberflächenfilm. Griffith\'s Gnat imitiert das adulte Insekt.',en:'Zebra Midge and Shipman\'s Buzzer imitate the pupa hanging in the surface film. Griffith\'s Gnat imitates the adult insect.'}},
+    {q:{de:'Was ist der Zweck einer Rippung (Rib) beim Fliegenbinden?',en:'What is the purpose of a rib in fly tying?'}, options:[{t:{de:'Segmentierung imitieren + Hechel/Material fixieren',en:'Imitate segmentation + secure hackle/material'},c:true},{t:{de:'Den Körper wasserdicht machen',en:'Make the body waterproof'},c:false},{t:{de:'Auftrieb erhöhen',en:'Increase buoyancy'},c:false},{t:{de:'Farbe hinzufügen',en:'Add colour only'},c:false}], expl:{de:'Die Rippung imitiert die Segmentierung von Insekten-Abdomen und sichert gleichzeitig palmered Hecheln oder fragile Materialien (Counter-Wrap).',en:'The rib imitates the segmentation of insect abdomens and simultaneously secures palmered hackles or fragile materials (counter-wrap).'}},
+  ];
+
+  _wikiFlat(){
+    const out=[];
+    for(const cat of this.WIKI_TREE){ for(const node of cat.nodes) out.push({...node,catId:cat.id,catLabel:cat.label}); }
+    return out;
+  }
+  _wikiNode(id){ return this._wikiFlat().find(n=>n.id===id)||this._wikiFlat()[0]; }
+
 
   // ---------- lifecycle ----------
   componentDidMount(){
@@ -965,6 +1148,12 @@ class Component extends DCLogic {
   };
   toggleNav = (e) => { if(e&&e.stopPropagation) e.stopPropagation(); this.setState(s=>({navOpen:!s.navOpen})); };
   setWikiTab = (e) => this.setState({ wikiTab: parseInt(e.currentTarget.dataset.i,10) });
+  setWikiSection = (e) => { const id=e.currentTarget.dataset.id; const part=id.split('/')[0]; this.setState(s=>({ wikiSection:id, wikiOpen:{...s.wikiOpen,[part]:true} })); };
+  toggleWikiSection = (e) => { const id=e.currentTarget.dataset.id; this.setState(s=>({ wikiOpen:{...s.wikiOpen,[id]:!s.wikiOpen[id]} })); };
+  goQuiz = () => { const q=this._pickQ(); this.setState({ screen:'quiz', navOpen:false, showResult:false, quizQ:q, quizSel:null, quizAnswered:false, quizScore:{r:0,w:0} }); };
+  answerQuiz = (e) => { const i=parseInt(e.currentTarget.dataset.i,10); if(this.state.quizAnswered) return; const q=this.state.quizQ; if(!q) return; const correct=q.options[i].correct; this.setState(s=>({ quizSel:i, quizAnswered:true, quizScore:{r:s.quizScore.r+(correct?1:0), w:s.quizScore.w+(correct?0:1)} })); };
+  nextQuiz = () => { const q=this._pickQ(); this.setState({ quizQ:q, quizSel:null, quizAnswered:false }); };
+  _pickQ = () => { const b=this.QUIZ_BANK; return b[Math.floor(Math.random()*b.length)]; };
   onScratchName = (e) => { const v=e.target.value; this.setState({scratchName:v}, ()=>{ if(this.state.build&&this.state.build.custom) this.persistScratch(this.state.build); }); };
   onScratchType = (e) => { const v=e.target.value; this.setState({scratchType:v}, ()=>{ if(this.state.build&&this.state.build.custom) this.persistScratch(this.state.build); }); };
   resetScratch = () => { const sc=this.makeScratch(); this.setState({ build:sc, scratch:sc, scratchName:'Meine Fliege', scratchType:'nymph' }, ()=>this.persistScratch(sc)); };
@@ -1500,6 +1689,7 @@ class Component extends DCLogic {
       onStyle:this.onStyle, onLength:this.onLength, onSweep:this.onSweep,
       goBuilder:this.goBuilder, goCatalog:this.goCatalog, goWiki:this.goWiki, toggleNav:this.toggleNav, setWikiTab:this.setWikiTab, navOpen:st.navOpen,
       goMyBuilds:this.goMyBuilds, onDeleteSaved:this.onDeleteSaved, saveCurrent:this.saveCurrent,
+      goQuiz:this.goQuiz, answerQuiz:this.answerQuiz, nextQuiz:this.nextQuiz,
       navItemHover:{background:'#1f252b'},
       finish:this.finish, closeModal:this.closeModal, stop:this.stop, share:this.share, exportTxt:this.exportTxt,
     };
@@ -1510,6 +1700,8 @@ class Component extends DCLogic {
     out.navFliesStyle=navLink(st.screen==='overview');
     out.navWikiStyle=navLink(st.screen==='wiki');
     out.navBuildsStyle=navLink(st.screen==='mybuilds');
+    out.navQuizStyle=navLink(st.screen==='quiz');
+    out.isQuiz=st.screen==='quiz';
     const mobile = (st.vw||1200) < 760;
     out.mobile = mobile;
     out.builderGrid = mobile ? '1fr' : '1fr 376px';
@@ -1518,16 +1710,47 @@ class Component extends DCLogic {
     out.padOv = mobile ? '28px 14px 80px' : '42px 28px 90px';
     out.flySubmenu=[{id:'all',label:t.top100},{id:'dry',label:L(this.TYPES.dry)},{id:'nymph',label:L(this.TYPES.nymph)},{id:'streamer',label:L(this.TYPES.streamer)}];
 
-    // wiki
-    const wTab=(active)=>({padding:'8px 15px',borderRadius:'9px',fontSize:'13px',fontWeight:600,cursor:'pointer',background:active?'#2fd3ac':'#13161a',color:active?'#06231e':'#9aa0a6',border:active?'1px solid #2fd3ac':'1px solid #23282e',fontFamily:'inherit'});
-    out.wikiTabs=this.WIKI.map((w,i)=>({i,label:L(w.label),style:wTab(st.wikiTab===i)}));
-    const wActive=this.WIKI[st.wikiTab]||this.WIKI[0];
-    out.wikiCards=wActive.cards.map(c=>({
-      heading:c.heading,
-      isTable:c.type==='table', isList:c.type!=='table',
-      rows:c.rows||[], cols:c.cols||[],
-      trows:(c.type==='table'?(c.rows||[]).map(r=>({cells:r})):[]),
+    // wiki tree
+    const wikiCatOpen=(id)=>!!st.wikiOpen[id];
+    out.wikiTree=this.WIKI_TREE.map(cat=>({
+      id:cat.id, label:L(cat.label), open:wikiCatOpen(cat.id),
+      nodes:cat.nodes.map(n=>({
+        id:n.id, num:n.num, label:L(n.label),
+        active:st.wikiSection===n.id,
+        activeStyle:st.wikiSection===n.id?{background:'rgba(47,211,172,.12)',color:'#2fd3ac',borderRadius:'8px',padding:'6px 10px',display:'flex',alignItems:'center',gap:'8px',cursor:'pointer',fontSize:'13px',fontWeight:600,width:'100%',border:'none',textAlign:'left',fontFamily:'inherit'}:{background:'none',color:'#9aa0a6',borderRadius:'8px',padding:'6px 10px',display:'flex',alignItems:'center',gap:'8px',cursor:'pointer',fontSize:'13px',fontWeight:500,width:'100%',border:'none',textAlign:'left',fontFamily:'inherit'},
+      })),
+      catStyle:{display:'flex',alignItems:'center',gap:'6px',padding:'7px 6px',cursor:'pointer',fontSize:'12px',fontWeight:700,color:'#6b7178',letterSpacing:'.08em',textTransform:'uppercase',background:'none',border:'none',width:'100%',textAlign:'left',fontFamily:'inherit'},
     }));
+    const wNode=this._wikiNode(st.wikiSection);
+    out.wikiNodeTitle=wNode?L(wNode.label):'';
+    out.wikiNodeNum=wNode&&wNode.num?wNode.num:'';
+    out.wikiSections=(wNode&&wNode.sections?wNode.sections:[]).map(sec=>({
+      heading:L(sec.heading),
+      isTable:!!sec.isTable,
+      isList:!sec.isTable,
+      rows:(sec.isTable?[]:(sec.rows||[])).map(r=>({term:L(r.term),text:L(r.text)})),
+      cols:(sec.isTable?(sec.cols||[]).map(c=>L(c)):[]),
+      trows:(sec.isTable?(sec.rows||[]).map(r=>({cells:r.map(cell=>typeof cell==='object'?L(cell):cell)})):[]),
+    }));
+    out.setWikiSection=this.setWikiSection;
+    out.toggleWikiSection=this.toggleWikiSection;
+
+    // quiz
+    const qObj=st.quizQ;
+    out.quizQuestion=qObj?L(qObj.q):'';
+    out.quizOptions=(qObj&&qObj.options?qObj.options:[]).map((o,i)=>{
+      let bg='#13161a', col='#cdd2d7', brd='#23282e';
+      if(st.quizAnswered){
+        if(o.c){ bg='rgba(47,211,172,.18)'; col='#2fd3ac'; brd='#2fd3ac'; }
+        else if(i===st.quizSel&&!o.c){ bg='rgba(224,80,80,.18)'; col='#e05050'; brd='#e05050'; }
+      }
+      return { i, label:L(o.t), style:{display:'flex',alignItems:'center',gap:'12px',width:'100%',textAlign:'left',background:bg,color:col,border:'1px solid '+brd,borderRadius:'11px',padding:'13px 16px',cursor:'pointer',fontSize:'14px',fontWeight:500,fontFamily:'inherit',marginBottom:'8px'} };
+    });
+    out.quizAnswered=!!st.quizAnswered;
+    out.quizCorrect=st.quizAnswered&&qObj&&qObj.options[st.quizSel]&&qObj.options[st.quizSel].c;
+    out.quizExplText=qObj?L(qObj.expl):'';
+    out.quizScoreR=st.quizScore?st.quizScore.r:0;
+    out.quizScoreW=st.quizScore?st.quizScore.w:0;
 
     // filters
     const fActive={padding:'7px 15px',borderRadius:'9px',fontSize:'13px',fontWeight:600,cursor:'pointer',background:'#2fd3ac',color:'#06231e',border:'1px solid #2fd3ac'};
