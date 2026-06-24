@@ -699,6 +699,7 @@ class Component extends DCLogic {
     body:{de:'Körper wickeln',en:'wrap the body'},
     rib:{de:'Rippung gegenwickeln',en:'counter-wrap the rib'},
     thorax:{de:'Brustkorb dubben',en:'dub the thorax'},
+    leg:{de:'Beine einbinden',en:'tie in the legs'},
     hackle:{de:'Hechel wickeln',en:'wind the hackle'},
     wing:{de:'Flügel aufsetzen',en:'set the wing'},
     head:{de:'Kopf formen und abbinden',en:'form the head and whip finish'},
@@ -710,7 +711,7 @@ class Component extends DCLogic {
     let g1=['hook','thread']; if(has('bead'))g1.unshift('bead'); if(has('weight'))g1.push('weight'); groups.push(g1);
     if(has('tail')) groups.push(['tail']);
     let g3=['body']; if(has('rib'))g3.push('rib'); groups.push(g3);
-    let g4=[]; ['thorax','hackle','wing','head'].forEach(t=>{ if(has(t)) g4.push(t); });
+    let g4=[]; ['thorax','leg','hackle','wing','head'].forEach(t=>{ if(has(t)) g4.push(t); });
     if(g4.length) groups.push(g4);
     return groups;
   }
@@ -731,10 +732,12 @@ class Component extends DCLogic {
       if(def.optional) slot.enabled=true;
       slots.push(slot);
     }
+    // ensure every fly has a leg slot so users can add legs in the builder
+    if (!slots.some(s=>s.type==='leg')){ const idx=slots.findIndex(s=>s.type==='hackle'); const legSlot={type:'leg',enabled:false,material:'rubber',color:this.defaultColorFor('leg')}; if(idx>=0) slots.splice(idx,0,legSlot); else slots.push(legSlot); }
     const stepParts=this.genStepParts(slots);
     return { id:f.id, type:f.type, diff:f.diff, name:f.name, tagline:f.tagline, slots, stepParts, steps:this.genSteps(stepParts) };
   }
-  get FLIES(){ if(!this._FLIES) this._FLIES=[...this.FULL_FLIES, ...this.COMPACT_FLIES.map(f=>this.expandFly(f))]; return this._FLIES; }
+  get FLIES(){ if(!this._FLIES){ const injectLeg=fly=>{ if(fly.slots.some(s=>s.type==='leg')) return fly; const ls={type:'leg',enabled:false,material:'rubber',color:this.defaultColorFor('leg')}; const slots=[...fly.slots]; const hi=slots.findIndex(s=>s.type==='hackle'); if(hi>=0) slots.splice(hi,0,ls); else slots.push(ls); return {...fly,slots}; }; this._FLIES=[...this.FULL_FLIES.map(injectLeg),...this.COMPACT_FLIES.map(f=>this.expandFly(f))]; } return this._FLIES; }
 
   COMPACT_FLIES = [
     // ---- DRY FLIES ----
