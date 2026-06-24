@@ -23,7 +23,6 @@
   ::-webkit-scrollbar-track { background: #0b0d0f; }
 </style>
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </helmet>
 
 <div style="min-height:100vh;background:#0b0d0f;color:#e6e8ea;font-family:'IBM Plex Sans',system-ui,sans-serif">
@@ -1223,7 +1222,7 @@ class Component extends DCLogic {
     if (this.state.viewMode!=='3d' || this.state.screen!=='builder' || !this.state.build) return;
     const host=document.getElementById('fly3d-host');
     if (!host) return;
-    if (!window.THREE || !window.THREE.OrbitControls){ clearTimeout(this._t3); this._t3=setTimeout(()=>this.ensure3D(),120); return; }
+    if (!window.THREE){ clearTimeout(this._t3); this._t3=setTimeout(()=>this.ensure3D(),120); return; }
     if (!this._three){ this.init3D(host); }
     else if (this._three.host!==host){ host.appendChild(this._three.renderer.domElement); this._three.host=host; }
     const sig=JSON.stringify(this.state.build);
@@ -1235,25 +1234,38 @@ class Component extends DCLogic {
     const w=host.clientWidth||360, h=host.clientHeight||200;
     const scene=new T.Scene();
     const camera=new T.PerspectiveCamera(38, w/h, 0.1, 100);
-    camera.position.set(0.4,1.1,8);
     const renderer=new T.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
     renderer.setSize(w,h);
     host.appendChild(renderer.domElement);
-    const controls=new T.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping=true; controls.dampingFactor=0.09; controls.autoRotate=true; controls.autoRotateSpeed=1.5; controls.enablePan=false; controls.minDistance=4.5; controls.maxDistance=16; controls.target.set(0,-0.1,0);
+    // Inline spherical orbit — no OrbitControls CDN dependency
+    const tgt=new T.Vector3(-0.35,-0.1,0);
+    let theta=0.09, phi=0.15, dist=8.12, drag=false, lastX=0, lastY=0;
+    const updateCam=()=>{ camera.position.set(tgt.x+dist*Math.cos(phi)*Math.sin(theta), tgt.y+dist*Math.sin(phi), tgt.z+dist*Math.cos(phi)*Math.cos(theta)); camera.lookAt(tgt); };
+    updateCam();
+    const el=renderer.domElement; el.style.cursor='grab';
+    el.addEventListener('mousedown', e=>{ drag=true; lastX=e.clientX; lastY=e.clientY; el.style.cursor='grabbing'; });
+    const onUp=()=>{ drag=false; el.style.cursor='grab'; };
+    window.addEventListener('mouseup', onUp);
+    el.addEventListener('mousemove', e=>{ if(!drag) return; theta-=(e.clientX-lastX)*0.008; phi+=(e.clientY-lastY)*0.005; phi=Math.max(-0.6,Math.min(1.2,phi)); lastX=e.clientX; lastY=e.clientY; });
+    el.addEventListener('wheel', e=>{ dist=Math.max(4.5,Math.min(16,dist+e.deltaY*0.02)); e.preventDefault(); },{passive:false});
+    let lt=null;
+    el.addEventListener('touchstart', e=>{ if(e.touches.length===1) lt=e.touches[0]; e.preventDefault(); },{passive:false});
+    el.addEventListener('touchmove', e=>{ if(e.touches.length===1&&lt){ const t=e.touches[0]; theta-=(t.clientX-lt.clientX)*0.008; phi+=(t.clientY-lt.clientY)*0.005; phi=Math.max(-0.6,Math.min(1.2,phi)); lt=t; } e.preventDefault(); },{passive:false});
+    el.addEventListener('touchend', ()=>{ lt=null; });
     scene.add(new T.HemisphereLight(0xdcecff,0x161210,0.95));
     const key=new T.DirectionalLight(0xffffff,1.15); key.position.set(5,7,5); scene.add(key);
     const fill=new T.DirectionalLight(0xaad4ff,0.45); fill.position.set(-6,2,4); scene.add(fill);
     const rim=new T.DirectionalLight(0xffffff,0.8); rim.position.set(-3,4,-7); scene.add(rim);
     const group=new T.Group(); scene.add(group);
+    const controls={ update(){ if(!drag){ theta+=0.012; } updateCam(); }, _onUp:onUp };
     this._three={renderer,scene,camera,controls,group,host};
     const animate=()=>{ if(!this._three) return; this._raf=requestAnimationFrame(animate); this._three.controls.update(); this._three.renderer.render(this._three.scene,this._three.camera); };
     animate();
     if(!this._onResize){ this._onResize=()=>this.resize3D(); window.addEventListener('resize',this._onResize); }
   }
   resize3D(){ if(!this._three) return; const {renderer,camera,host}=this._three; const w=host.clientWidth||360, h=host.clientHeight||200; if(w<2||h<2) return; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
-  teardown3D(){ if(this._raf) cancelAnimationFrame(this._raf); if(this._onResize){ window.removeEventListener('resize',this._onResize); this._onResize=null; } if(this._three){ try{ this._three.renderer.dispose(); }catch(e){} } this._three=null; this._sig=null; }
+  teardown3D(){ if(this._raf) cancelAnimationFrame(this._raf); if(this._onResize){ window.removeEventListener('resize',this._onResize); this._onResize=null; } if(this._three){ if(this._three.controls&&this._three.controls._onUp) window.removeEventListener('mouseup',this._three.controls._onUp); try{ this._three.renderer.dispose(); }catch(e){} } this._three=null; this._sig=null; }
   rebuild3D(){ if(!this._three) return; const g=this._three.group; while(g.children.length){ const c=g.children.pop(); if(c.geometry)c.geometry.dispose(); if(c.material){ (Array.isArray(c.material)?c.material:[c.material]).forEach(m=>m.dispose()); } } try { g.add(this.buildFlyGroup(this.state.build)); } catch(err){ console.error('buildFlyGroup failed:', err); } }
 
   buildFlyGroup(build){
