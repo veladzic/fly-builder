@@ -1316,6 +1316,7 @@ class Component extends DCLogic {
   ];
 
   _photoCache = {};
+  _lastActiveFlyId = null;
 
   fetchFlyPhoto(flyId, flyName) {
     if (flyId in this._photoCache) {
@@ -1476,10 +1477,11 @@ class Component extends DCLogic {
   persist(saved){ try { localStorage.setItem('flyforge_saved', JSON.stringify(saved)); } catch(e){} }
 
   // ---------- 3D view ----------
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate() {
     this.ensure3D();
-    const st = this.state, ps = prevState;
-    if (st.activeFlyId !== ps.activeFlyId) {
+    const st = this.state;
+    if (st.activeFlyId !== this._lastActiveFlyId) {
+      this._lastActiveFlyId = st.activeFlyId;
       const fly = (st.build && !st.build.custom) ? this.flyById(st.activeFlyId) : null;
       if (fly) this.fetchFlyPhoto(fly.id, fly.name);
       else if (st.flyPhotoUrl) this.setState({ flyPhotoUrl: null });
@@ -2137,9 +2139,9 @@ class Component extends DCLogic {
 
       out.flyPhotoUrl = (!st.build.custom && st.flyPhotoUrl) ? st.flyPhotoUrl : '';
       out.showFlyPhoto = !st.build.custom && !!st.flyPhotoUrl;
-      out.onPhotoError = (e) => { e.currentTarget.parentElement.style.display='none'; };
     }
 
+    out.onPhotoError = (e) => { e.currentTarget.parentElement.style.display='none'; };
     return out;
   }
 }
