@@ -507,7 +507,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;de&quot;,&quot;en&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'de'|'en'&quot;},&quot;defaultFilter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;dry&quot;,&quot;nymph&quot;,&quot;streamer&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showTyingSteps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false,technik:false,fischen:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizMastered: [], quizAnswered: false };
+  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false,technik:false,fischen:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizMastered: [], quizAnswered: false, flyPhotoUrl: null };
 
   // ---------- static data ----------
   SIZES = [4,6,8,10,12,14,16,18,20,22];
@@ -1315,37 +1315,43 @@ class Component extends DCLogic {
     {q:{de:'Was ist die Funktion von "Floatant" bei Trockenliegen?',en:'What is the function of "floatant" on dry flies?'}, options:[{t:{de:'Imprägniert Hecheln und Körper mit wasserabweisenden Substanzen damit die Fliege im Film bleibt',en:'Impregnates hackles and body with water-repellent substances to keep the fly in the film'},c:true},{t:{de:'Fügt Auftrieb durch eingeschlossene Luft hinzu',en:'Adds buoyancy by trapping air'},c:false},{t:{de:'Verhindert dass Fische die Fliege als künstlich erkennen',en:'Prevents fish from recognising the fly as artificial'},c:false},{t:{de:'Verbessert die Sichtbarkeit für den Angler',en:'Improves visibility for the angler'},c:false}], expl:{de:'Floatant (z.B. Gink, Lochsa) beschichtet Fasern wasserabweisend — Hecheln und Körper schieben Wasser ab statt es aufzusaugen. Wichtig: nur auf absolut trockene Fliege auftragen. Nach Benässung: Amadou-Pad oder Powder-Floatant verwenden.',en:'Floatant (e.g. Gink, Lochsa) coats fibres water-repellently — hackles and body repel water instead of absorbing it. Important: apply only to a completely dry fly. After wetting: use amadou pad or powder floatant.'}},
   ];
 
-  FLY_PHOTOS = {
-    adams:'Parachute_Adams_Dry_Fly.jpg', adams_std:'AdamsDryFly.jpg', wulff:'Royal_Wulff_Dry_Fly_01.jpg',
-    woolly:'Woolly_Bugger.jpg', caddis:'Elk_Hair_Caddis.jpg', ptn:'Pheasant_Tail_Nymph.jpg',
-    hares:'Hares_ear_nymph.jpg', clouser:'Clouser_minnow.jpg', griffith:'Griffiths_Gnat.jpg',
-    zebra:'Zebra_midge.jpg', prince:'Prince_nymph.jpg', copperjohn:'Copper_John.jpg',
-    muddler:'Muddler_minnow.jpg', sanjuan:'San_Juan_Worm.jpg', coachman:'Royal_Coachman.jpg',
-    stimulator:'Stimulator_(fly).jpg', comparadun:'Comparadun.jpg', goddard:'Goddard_Caddis.jpg',
-    klinkhammer:'Klinkhammer_Special.jpg', humpy:'Humpy.jpg', partridgeorange:'Partridge_and_Orange.jpg',
-    scud:'Scud_(fly).jpg', brassie:'Brassie.jpg', rs2:'RS2.jpg', zonker:'Zonker.jpg',
-    mickeyfinn:'Mickey_Finn.jpg', blackghost:'Black_Ghost_(fly).jpg', grayghost:'Gray_Ghost_(fly).jpg',
-    beadbugger:'Beadhead_Woolly_Bugger.jpg', cahill:'Light_Cahill.jpg', bwo:'Blue_winged_olive.jpg',
-    pmd:'Pale_morning_dun.jpg', quillgordon:'Quill_Gordon.jpg', hendrickson:'Hendrickson.jpg',
-    marchbrown:'March_Brown_(fly).jpg', greywulff:'Grey_Wulff.jpg', renegade:'Renegade_(fly).jpg',
-    cdcdun:'CDC_dun_fly.jpg', sparkledun:'Sparkle_Dun.jpg', xcaddis:'X-Caddis.jpg',
-    rustyspinner:'Rusty_Spinner.jpg', blackgnat:'Black_Gnat_fly.jpg', trico:'Trico_Spinner.jpg',
-    daveshopper:'Daves_Hopper.jpg', yellowsally:'Yellow_Sally.jpg', greendrake:'Green_Drake.jpg',
-    flashpt:'Flashback_Pheasant_Tail.jpg', flashhares:'Flashback_Hares_Ear.jpg',
-    perdigon:'Perdigon.jpg', rainbowwarrior:'Rainbow_Warrior_nymph.jpg',
-    rubberlegs:'Pats_Rubber_Legs.jpg', goldenstone:'Golden_stonefly_nymph.jpg',
-    damsel:'Damsel_nymph.jpg', czech:'Czech_nymph.jpg', squirmy:'Squirmy_Wormy.jpg',
-    eggleech:'Egg_sucking_leech.jpg', bunnyleech:'Bunny_Leech.jpg', mopfly:'Mop_fly.jpg',
-    chernobyl:'Chernobyl_Ant.jpg', deceiver:'Leftys_Deceiver.jpg', frenchie:'Frenchie_nymph.jpg',
-    wd40:'WD-40.jpg', sowbug:'Sowbug_(fly).jpg', caddislarva:'Caddis_larva.jpg',
-    globug:'Glo_Bug.jpg', ptsofthackle:'Pheasant_Tail_Soft_Hackle.jpg',
-    birdsnest:'Birds_nest_nymph.jpg', caddispupa:'Caddis_pupa.jpg',
-    serendipity:'Serendipity_(fly).jpg', woolyworm:'Wooly_Worm.jpg',
-    kaufmannstone:'Kaufmanns_Stonefly.jpg', discomidge:'Disco_midge.jpg',
-    sexywalts:'Sexy_Walts_nymph.jpg', sculpin:'Sculpin_(fly).jpg',
-    sparkleminnow:'Sparkle_Minnow.jpg', dahlberg:'Dahlberg_Diver.jpg',
-    slumpbuster:'Slumpbuster.jpg', maraboumuddler:'Marabou_Muddler.jpg',
-  };
+  _photoCache = {};
+
+  fetchFlyPhoto(flyId, flyName) {
+    if (flyId in this._photoCache) {
+      const cached = this._photoCache[flyId];
+      if (cached !== undefined) this.setState({ flyPhotoUrl: cached || null });
+      return;
+    }
+    this._photoCache[flyId] = undefined; // pending
+    this.setState({ flyPhotoUrl: null });
+    const enc = encodeURIComponent;
+    const avoid = ['diagram','map','icon','logo','svg','stamp','coin','badge'];
+    const base = 'https://commons.wikimedia.org/w/api.php';
+    fetch(base + '?action=query&list=search&srsearch=' + enc(flyName + ' fly fishing') + '&srnamespace=6&srlimit=6&format=json&origin=*')
+      .then(r => r.json())
+      .then(data => {
+        const results = data?.query?.search || [];
+        const hit = results.find(r => !avoid.some(b => r.title.toLowerCase().includes(b)));
+        if (!hit) { this._photoCache[flyId] = null; return null; }
+        return fetch(base + '?action=query&titles=' + enc(hit.title) + '&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*').then(r => r.json());
+      })
+      .then(data => {
+        if (!data) return;
+        for (const page of Object.values(data?.query?.pages || {})) {
+          for (const ii of (page.imageinfo || [])) {
+            if (ii.mime?.startsWith('image/') && !ii.mime.includes('svg')) {
+              const url = ii.thumburl || ii.url;
+              this._photoCache[flyId] = url;
+              if (this.state.activeFlyId === flyId) this.setState({ flyPhotoUrl: url });
+              return;
+            }
+          }
+        }
+        this._photoCache[flyId] = null;
+      })
+      .catch(() => { this._photoCache[flyId] = null; });
+  }
 
   _wikiFlat(){
     const out=[];
@@ -1470,7 +1476,15 @@ class Component extends DCLogic {
   persist(saved){ try { localStorage.setItem('flyforge_saved', JSON.stringify(saved)); } catch(e){} }
 
   // ---------- 3D view ----------
-  componentDidUpdate(){ this.ensure3D(); }
+  componentDidUpdate(prevProps, prevState) {
+    this.ensure3D();
+    const st = this.state, ps = prevState;
+    if (st.activeFlyId !== ps.activeFlyId) {
+      const fly = (st.build && !st.build.custom) ? this.flyById(st.activeFlyId) : null;
+      if (fly) this.fetchFlyPhoto(fly.id, fly.name);
+      else if (st.flyPhotoUrl) this.setState({ flyPhotoUrl: null });
+    }
+  }
   componentWillUnmount(){ this.teardown3D(); if(this._onVw){ window.removeEventListener('resize',this._onVw); this._onVw=null; } }
   setView2d = () => this.setState({ viewMode:'2d' });
   setView3d = () => this.setState({ viewMode:'3d' });
@@ -2121,9 +2135,8 @@ class Component extends DCLogic {
         return { name:L({de:def.de,en:def.en}), detail:this.partDetail(s,false), color: def.hasColor?this.hex(s.color):'#565b61' };
       });
 
-      const photoFile = !st.build.custom ? (this.FLY_PHOTOS[fly.id] || null) : null;
-      out.flyPhotoUrl = photoFile ? 'https://commons.wikimedia.org/wiki/Special:FilePath/'+photoFile+'?width=600' : '';
-      out.showFlyPhoto = !!photoFile;
+      out.flyPhotoUrl = (!st.build.custom && st.flyPhotoUrl) ? st.flyPhotoUrl : '';
+      out.showFlyPhoto = !st.build.custom && !!st.flyPhotoUrl;
       out.onPhotoError = (e) => { e.currentTarget.parentElement.style.display='none'; };
     }
 
