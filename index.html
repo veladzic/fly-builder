@@ -1720,7 +1720,7 @@ class Component extends DCLogic {
     })[ht] || {SE:314,R:17,w:3.0,eye:'down',eyeR:6.0,drop:0};
     const shankStart=118; const drop=HKp.drop||0; const isCurved=drop>0;
     const cyAt = isCurved ? (x=>{ let t=(x-shankStart)/(HKp.SE-shankStart); t=Math.max(0,Math.min(1,t)); return sy + drop*Math.pow(t,1.6); }) : (()=>sy);
-    const x0 = beadOn ? 132 : 124, x1 = HKp.SE - 3;
+    const x0 = beadOn ? 132 : 124, x1 = HKp.SE;
     const body=get('body');
     const ampFor=m=>['floss','tinsel'].includes(m)?8:['chenille','dubbing_syn','dubbing_nat'].includes(m)?15:11;
 
