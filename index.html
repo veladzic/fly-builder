@@ -1318,28 +1318,39 @@ class Component extends DCLogic {
   _photoCache = {};
   _lastActiveFlyId = null;
 
-  fetchFlyPhoto(flyId, flyName) {
+  async fetchFlyPhoto(flyId, flyName) {
     if (flyId in this._photoCache) {
       const cached = this._photoCache[flyId];
       if (cached !== undefined) this.setState({ flyPhotoUrl: cached || null });
       return;
     }
-    this._photoCache[flyId] = undefined; // pending
+    this._photoCache[flyId] = undefined;
     this.setState({ flyPhotoUrl: null });
     const enc = encodeURIComponent;
-    const avoid = ['diagram','map','icon','logo','svg','stamp','coin','badge'];
     const base = 'https://commons.wikimedia.org/w/api.php';
-    fetch(base + '?action=query&list=search&srsearch=' + enc(flyName + ' fly fishing') + '&srnamespace=6&srlimit=6&format=json&origin=*')
-      .then(r => r.json())
-      .then(data => {
-        const results = data?.query?.search || [];
-        const hit = results.find(r => !avoid.some(b => r.title.toLowerCase().includes(b)));
-        if (!hit) { this._photoCache[flyId] = null; return null; }
-        return fetch(base + '?action=query&titles=' + enc(hit.title) + '&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*').then(r => r.json());
-      })
-      .then(data => {
-        if (!data) return;
-        for (const page of Object.values(data?.query?.pages || {})) {
+    // Title must contain at least one fly-fishing word
+    const want = ['fly','nymph','streamer','bugger','minnow','lure','pattern','hook','fishing','caddis','mayfly','stonefly','wulff','adams','hares','leech','worm'];
+    // Title must NOT contain these (insect biology or unrelated)
+    const skip = ['diagram','map','icon','logo','svg','stamp','coin','badge','insect',
+                  'larva','larvae','pupa','pupae','trichoptera','ephemeroptera',
+                  'plecoptera','diptera','macro','entomology','species','natural'];
+    const goodTitle = t => {
+      const low = t.toLowerCase();
+      return !skip.some(b => low.includes(b)) && want.some(w => low.includes(w));
+    };
+    // Try category-scoped query first, then broader fallbacks
+    const queries = [
+      flyName + ' incategory:Fly_fishing',
+      flyName + ' fly tying',
+      flyName + ' fly fishing',
+    ];
+    try {
+      for (const q of queries) {
+        const d1 = await fetch(base + '?action=query&list=search&srsearch=' + enc(q) + '&srnamespace=6&srlimit=8&format=json&origin=*').then(r => r.json());
+        const hit = (d1?.query?.search || []).find(r => goodTitle(r.title));
+        if (!hit) continue;
+        const d2 = await fetch(base + '?action=query&titles=' + enc(hit.title) + '&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*').then(r => r.json());
+        for (const page of Object.values(d2?.query?.pages || {})) {
           for (const ii of (page.imageinfo || [])) {
             if (ii.mime?.startsWith('image/') && !ii.mime.includes('svg')) {
               const url = ii.thumburl || ii.url;
@@ -1349,9 +1360,11 @@ class Component extends DCLogic {
             }
           }
         }
-        this._photoCache[flyId] = null;
-      })
-      .catch(() => { this._photoCache[flyId] = null; });
+      }
+      this._photoCache[flyId] = null;
+    } catch(e) {
+      this._photoCache[flyId] = null;
+    }
   }
 
   _wikiFlat(){
