@@ -227,7 +227,7 @@ async function wpRestSearch(query) {
   return (data.pages || [])
     .filter(p => p.thumbnail?.url)
     .map(p => ({
-      url: p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url,
+      url: (p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url).replace(/\/\d+px-/, '/800px-'),
       src: 'WP'
     }));
 }
@@ -240,8 +240,8 @@ async function commonsRestSearch(query) {
   const results = [];
   for (const p of (data.pages || [])) {
     if (p.thumbnail?.url) {
-      const url = p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url;
-      results.push({ url, src: 'WC' });
+      const raw = p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url;
+      results.push({ url: raw.replace(/\/\d+px-/, '/800px-'), src: 'WC' });
     }
   }
   return results;
