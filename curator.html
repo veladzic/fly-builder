@@ -215,53 +215,48 @@ const FLIES = [
   ['zonker',         'Zonker',                   'Zonker streamer fly fishing'],
 ];
 
-const WIKI = 'https://commons.wikimedia.org/w/api.php';
-const WP   = 'https://en.wikipedia.org/w/api.php';
 const mapping = {};
 let idx = 0;
 let nextCache = null;
 
-async function wikimediaSearch(query) {
-  const enc = encodeURIComponent;
-  const url = WIKI + '?action=query&generator=search&gsrsearch=' + enc(query) +
-    '&gsrnamespace=6&gsrlimit=15&prop=imageinfo&iiprop=url|mime&iiurlwidth=400&format=json&origin=*';
-  const data = await fetch(url).then(r => r.json());
+// Wikipedia REST API — official CORS support, no origin param needed
+async function wpRestSearch(query) {
+  const r = await fetch('https://en.wikipedia.org/w/rest.php/v1/search/page?q=' +
+    encodeURIComponent(query) + '&limit=10');
+  const data = await r.json();
+  return (data.pages || [])
+    .filter(p => p.thumbnail?.url)
+    .map(p => ({
+      url: p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url,
+      src: 'WP'
+    }));
+}
+
+// Wikimedia Commons REST API — also proper CORS support
+async function commonsRestSearch(query) {
+  const r = await fetch('https://commons.wikimedia.org/w/rest.php/v1/search/page?q=' +
+    encodeURIComponent(query) + '&limit=10');
+  const data = await r.json();
   const results = [];
-  for (const p of Object.values(data?.query?.pages || {})) {
-    for (const ii of (p.imageinfo || [])) {
-      const mime = ii.mime || '';
-      if (mime.startsWith('image/') && !mime.includes('svg')) {
-        results.push({ url: ii.thumburl || ii.url, src: 'W' });
-      }
+  for (const p of (data.pages || [])) {
+    if (p.thumbnail?.url) {
+      const url = p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url;
+      results.push({ url, src: 'WC' });
     }
   }
   return results;
 }
 
-async function wikipediaImages(name) {
-  const enc = encodeURIComponent;
-  const titles = [name, name + ' (fly fishing)', name + ' fly'].join('|');
-  const url = WP + '?action=query&titles=' + enc(titles) +
-    '&prop=pageimages&pithumbsize=600&format=json&origin=*';
-  const data = await fetch(url).then(r => r.json());
-  const results = [];
-  for (const p of Object.values(data?.query?.pages || {})) {
-    if (p.thumbnail?.source) results.push({ url: p.thumbnail.source, src: 'P' });
-  }
-  return results;
-}
-
 async function loadImages([id, name, query]) {
-  const [w1, w2, wp] = await Promise.allSettled([
-    wikimediaSearch(query),
-    wikimediaSearch(name + ' fly tying'),
-    wikipediaImages(name),
+  const [r1, r2, r3, r4] = await Promise.allSettled([
+    wpRestSearch(name + ' fly fishing'),
+    wpRestSearch(name + ' fly pattern'),
+    commonsRestSearch(query),
+    commonsRestSearch(name + ' fly tying'),
   ]);
-  const all = [
-    ...(wp.status === 'fulfilled' ? wp.value : []),
-    ...(w1.status === 'fulfilled' ? w1.value : []),
-    ...(w2.status === 'fulfilled' ? w2.value : []),
-  ];
+  const all = [r1, r2, r3, r4]
+    .filter(r => r.status === 'fulfilled')
+    .flatMap(r => r.value);
   const seen = new Set();
   return all.filter(x => x.url && !seen.has(x.url) && seen.add(x.url)).slice(0, 9);
 }
@@ -292,8 +287,8 @@ function renderGrid(items) {
       img.loading = 'lazy';
       img.onerror = () => { d.className = 'thumb empty'; d.innerHTML = ''; };
       const badge = document.createElement('div');
-      badge.className = 'badge badge-' + items[i].src.toLowerCase();
-      badge.textContent = items[i].src === 'P' ? 'Wikipedia' : 'Commons';
+      badge.className = 'badge badge-' + (items[i].src === 'WP' ? 'p' : 'w');
+      badge.textContent = items[i].src === 'WP' ? 'Wikipedia' : 'Commons';
       d.appendChild(img);
       d.appendChild(badge);
       const url = items[i].url;
