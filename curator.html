@@ -219,40 +219,69 @@ const mapping = {};
 let idx = 0;
 let nextCache = null;
 
-// Wikipedia REST API — official CORS support, no origin param needed
-async function wpRestSearch(query) {
-  const r = await fetch('https://en.wikipedia.org/w/rest.php/v1/search/page?q=' +
-    encodeURIComponent(query) + '&limit=10');
-  const data = await r.json();
-  return (data.pages || [])
-    .filter(p => p.thumbnail?.url)
-    .map(p => ({
-      url: (p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url).replace(/\/\d+px-/, '/800px-'),
-      src: 'WP'
-    }));
+// Keywords that indicate a fly fishing pattern photo
+const FLY_TERMS = ['fly','nymph','streamer','bugger','minnow','lure','hook','caddis',
+  'stonefly','wulff','leech','midge','spinner','dun','emerger','woolly','wooly',
+  'chironomid','scud','pupa','mayfly','pheasant','hares','adams','muddler'];
+// Keywords that indicate it is NOT a fly pattern
+const BAD_TERMS = ['fisherman','angler','river ','stream ','lake ','pond ','creek ',
+  'trout ','salmon ','bass ','carp ','portrait','fishing rod',' rod ','reel ',
+  'boat ','mountain','landscape','map ','diagram','insect ','larva','trichoptera'];
+
+function thumbUrl(raw) {
+  const url = raw.startsWith('//') ? 'https:' + raw : raw;
+  return url.replace(/\/\d+px-/, '/800px-');
 }
 
-// Wikimedia Commons REST API — also proper CORS support
-async function commonsRestSearch(query) {
+// Check if image URL looks like a fly pattern photo
+function isFlyPhoto(url, flyName) {
+  try {
+    const parts = decodeURIComponent(url).split('/');
+    const filename = parts[parts.length - 1].toLowerCase().replace(/[_\-+]/g, ' ');
+    if (BAD_TERMS.some(b => filename.includes(b))) return false;
+    // Accept if fly name words appear in filename
+    const nameWords = flyName.toLowerCase().split(' ').filter(w => w.length > 3);
+    if (nameWords.some(w => filename.includes(w))) return true;
+    // Accept if fly-craft terms appear
+    return FLY_TERMS.some(t => filename.includes(t));
+  } catch(e) { return true; }
+}
+
+// Wikipedia article title must match the fly name to use its thumbnail
+function titleMatchesFly(articleTitle, flyName) {
+  const t = articleTitle.toLowerCase();
+  const words = flyName.toLowerCase().split(' ').filter(w => w.length > 3);
+  return words.some(w => t.includes(w));
+}
+
+async function wpRestSearch(flyName, query) {
+  const r = await fetch('https://en.wikipedia.org/w/rest.php/v1/search/page?q=' +
+    encodeURIComponent(query) + '&limit=12');
+  const data = await r.json();
+  return (data.pages || [])
+    .filter(p => p.thumbnail?.url && titleMatchesFly(p.title, flyName))
+    .map(p => ({ url: thumbUrl(p.thumbnail.url), src: 'WP' }));
+}
+
+async function commonsRestSearch(flyName, query) {
   const r = await fetch('https://commons.wikimedia.org/w/rest.php/v1/search/page?q=' +
-    encodeURIComponent(query) + '&limit=10');
+    encodeURIComponent(query) + '&limit=12');
   const data = await r.json();
   const results = [];
   for (const p of (data.pages || [])) {
-    if (p.thumbnail?.url) {
-      const raw = p.thumbnail.url.startsWith('//') ? 'https:' + p.thumbnail.url : p.thumbnail.url;
-      results.push({ url: raw.replace(/\/\d+px-/, '/800px-'), src: 'WC' });
-    }
+    if (!p.thumbnail?.url) continue;
+    const url = thumbUrl(p.thumbnail.url);
+    if (isFlyPhoto(url, flyName)) results.push({ url, src: 'WC' });
   }
   return results;
 }
 
 async function loadImages([id, name, query]) {
   const [r1, r2, r3, r4] = await Promise.allSettled([
-    wpRestSearch(name + ' fly fishing'),
-    wpRestSearch(name + ' fly pattern'),
-    commonsRestSearch(query),
-    commonsRestSearch(name + ' fly tying'),
+    wpRestSearch(name, name + ' fly fishing'),
+    wpRestSearch(name, name + ' fly pattern'),
+    commonsRestSearch(name, query),
+    commonsRestSearch(name, name + ' fly tying'),
   ]);
   const all = [r1, r2, r3, r4]
     .filter(r => r.status === 'fulfilled')
