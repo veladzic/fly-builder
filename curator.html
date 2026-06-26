@@ -219,61 +219,52 @@ const mapping = {};
 let idx = 0;
 let nextCache = null;
 
-// Keywords that indicate a fly fishing pattern photo
-const FLY_TERMS = ['fly','nymph','streamer','bugger','minnow','lure','hook','caddis',
-  'stonefly','wulff','leech','midge','spinner','dun','emerger','woolly','wooly',
-  'chironomid','scud','pupa','mayfly','pheasant','hares','adams','muddler'];
-// Keywords that indicate it is NOT a fly pattern
-const BAD_TERMS = ['fisherman','angler','river ','stream ','lake ','pond ','creek ',
-  'trout ','salmon ','bass ','carp ','portrait','fishing rod',' rod ','reel ',
-  'boat ','mountain','landscape','map ','diagram','insect ','larva','trichoptera'];
-
 function thumbUrl(raw) {
   const url = raw.startsWith('//') ? 'https:' + raw : raw;
   return url.replace(/\/\d+px-/, '/800px-');
 }
 
-// Check if image URL looks like a fly pattern photo
-function isFlyPhoto(url, flyName) {
+// Returns true if filename contains any word from the fly name (>2 chars)
+function filenameMatchesFly(url, flyName) {
   try {
     const parts = decodeURIComponent(url).split('/');
     const filename = parts[parts.length - 1].toLowerCase().replace(/[_\-+]/g, ' ');
-    if (BAD_TERMS.some(b => filename.includes(b))) return false;
-    // Accept if fly name words appear in filename
-    const nameWords = flyName.toLowerCase().split(' ').filter(w => w.length > 3);
-    if (nameWords.some(w => filename.includes(w))) return true;
-    // Accept if fly-craft terms appear
-    return FLY_TERMS.some(t => filename.includes(t));
-  } catch(e) { return true; }
+    const words = flyName.toLowerCase().split(' ').filter(w => w.length > 2);
+    return words.some(w => filename.includes(w));
+  } catch(e) { return false; }
 }
 
-// Wikipedia article title must match the fly name to use its thumbnail
-function titleMatchesFly(articleTitle, flyName) {
-  const t = articleTitle.toLowerCase();
-  const words = flyName.toLowerCase().split(' ').filter(w => w.length > 3);
-  return words.some(w => t.includes(w));
+// Hard rejects only: clearly not a fly pattern at all
+const HARD_SKIP = ['fisherman','angler','portrait','landscape','diagram',' map ','trichoptera','ephemeroptera'];
+function notHardSkip(url) {
+  try {
+    const filename = decodeURIComponent(url).split('/').pop().toLowerCase();
+    return !HARD_SKIP.some(b => filename.includes(b));
+  } catch(e) { return true; }
 }
 
 async function wpRestSearch(flyName, query) {
   const r = await fetch('https://en.wikipedia.org/w/rest.php/v1/search/page?q=' +
     encodeURIComponent(query) + '&limit=12');
   const data = await r.json();
-  return (data.pages || [])
-    .filter(p => p.thumbnail?.url && titleMatchesFly(p.title, flyName))
-    .map(p => ({ url: thumbUrl(p.thumbnail.url), src: 'WP' }));
+  const pages = (data.pages || []).filter(p => p.thumbnail?.url);
+  const nameWords = flyName.toLowerCase().split(' ').filter(w => w.length > 2);
+  // Prefer articles whose title contains a fly name word; fall back to all
+  const strict = pages.filter(p => nameWords.some(w => p.title.toLowerCase().includes(w)));
+  const source = strict.length > 0 ? strict : pages;
+  return source.map(p => ({ url: thumbUrl(p.thumbnail.url), src: 'WP' }));
 }
 
 async function commonsRestSearch(flyName, query) {
   const r = await fetch('https://commons.wikimedia.org/w/rest.php/v1/search/page?q=' +
     encodeURIComponent(query) + '&limit=12');
   const data = await r.json();
-  const results = [];
-  for (const p of (data.pages || [])) {
-    if (!p.thumbnail?.url) continue;
-    const url = thumbUrl(p.thumbnail.url);
-    if (isFlyPhoto(url, flyName)) results.push({ url, src: 'WC' });
-  }
-  return results;
+  const all = (data.pages || [])
+    .filter(p => p.thumbnail?.url)
+    .map(p => ({ url: thumbUrl(p.thumbnail.url), src: 'WC' }));
+  // Prefer images whose filename matches fly name; fall back to hard-skip-only filter
+  const strict = all.filter(x => filenameMatchesFly(x.url, flyName));
+  return strict.length > 0 ? strict : all.filter(x => notHardSkip(x.url));
 }
 
 async function loadImages([id, name, query]) {
