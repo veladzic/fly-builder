@@ -324,13 +324,6 @@
               </div>
             </div>
           </sc-if>
-          <sc-if value="{{ showFlyPhoto }}" hint-placeholder-val="{{ false }}">
-            <div style="background:#13161a;border:1px solid #23282e;border-radius:14px;overflow:hidden">
-              <div style="font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#6b7178;padding:13px 18px 11px">{{ t.photoLabel }}</div>
-              <img src="{{ flyPhotoUrl }}" alt="{{ activeName }}" onError="{{ onPhotoError }}" style="width:100%;max-height:300px;object-fit:cover;display:block" />
-              <div style="padding:6px 14px 10px;font-size:10px;color:#4a5058;font-family:'IBM Plex Mono'">© Wikimedia Commons</div>
-            </div>
-          </sc-if>
         </div>
       </div>
     </div>
@@ -507,7 +500,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;de&quot;,&quot;en&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;'de'|'en'&quot;},&quot;defaultFilter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;dry&quot;,&quot;nymph&quot;,&quot;streamer&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showTyingSteps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false,technik:false,fischen:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizMastered: [], quizAnswered: false, flyPhotoUrl: null };
+  state = { lang: 'de', screen: 'builder', filter: 'all', query: '', activeFlyId: null, build: null, scratch: null, scratchName: 'Meine Fliege', scratchType: 'nymph', navOpen: false, wikiTab: 0, wikiSection: 'insekten/mayfly', wikiOpen: {insekten:true,anatomie:false,haken:false,material:false,technik:false,fischen:false}, vw: 1200, saved: [], savedToast: false, showResult: false, copied: false, viewMode: '2d', quizQ: null, quizSel: null, quizMastered: [], quizAnswered: false };
 
   // ---------- static data ----------
   SIZES = [4,6,8,10,12,14,16,18,20,22];
@@ -662,7 +655,6 @@ class Component extends DCLogic {
     quizWrong:{de:'Falsch.',en:'Wrong.'},
     quizScoreLabel:{de:'Gemeistert',en:'Mastered'},
     quizExpl:{de:'Erklärung',en:'Explanation'},
-    photoLabel:{de:'Foto',en:'Photo'},
   };
 
   FULL_FLIES = [
@@ -1315,58 +1307,6 @@ class Component extends DCLogic {
     {q:{de:'Was ist die Funktion von "Floatant" bei Trockenliegen?',en:'What is the function of "floatant" on dry flies?'}, options:[{t:{de:'Imprägniert Hecheln und Körper mit wasserabweisenden Substanzen damit die Fliege im Film bleibt',en:'Impregnates hackles and body with water-repellent substances to keep the fly in the film'},c:true},{t:{de:'Fügt Auftrieb durch eingeschlossene Luft hinzu',en:'Adds buoyancy by trapping air'},c:false},{t:{de:'Verhindert dass Fische die Fliege als künstlich erkennen',en:'Prevents fish from recognising the fly as artificial'},c:false},{t:{de:'Verbessert die Sichtbarkeit für den Angler',en:'Improves visibility for the angler'},c:false}], expl:{de:'Floatant (z.B. Gink, Lochsa) beschichtet Fasern wasserabweisend — Hecheln und Körper schieben Wasser ab statt es aufzusaugen. Wichtig: nur auf absolut trockene Fliege auftragen. Nach Benässung: Amadou-Pad oder Powder-Floatant verwenden.',en:'Floatant (e.g. Gink, Lochsa) coats fibres water-repellently — hackles and body repel water instead of absorbing it. Important: apply only to a completely dry fly. After wetting: use amadou pad or powder floatant.'}},
   ];
 
-  _photoCache = {};
-  _lastActiveFlyId = null;
-
-  async fetchFlyPhoto(flyId, flyName) {
-    if (flyId in this._photoCache) {
-      const cached = this._photoCache[flyId];
-      if (cached !== undefined) this.setState({ flyPhotoUrl: cached || null });
-      return;
-    }
-    this._photoCache[flyId] = undefined;
-    this.setState({ flyPhotoUrl: null });
-    const enc = encodeURIComponent;
-    const base = 'https://commons.wikimedia.org/w/api.php';
-    // Title must contain at least one fly-fishing word
-    const want = ['fly','nymph','streamer','bugger','minnow','lure','pattern','hook','fishing','caddis','mayfly','stonefly','wulff','adams','hares','leech','worm'];
-    // Title must NOT contain these (insect biology or unrelated)
-    const skip = ['diagram','map','icon','logo','svg','stamp','coin','badge','insect',
-                  'larva','larvae','pupa','pupae','trichoptera','ephemeroptera',
-                  'plecoptera','diptera','macro','entomology','species','natural'];
-    const goodTitle = t => {
-      const low = t.toLowerCase();
-      return !skip.some(b => low.includes(b)) && want.some(w => low.includes(w));
-    };
-    // Try category-scoped query first, then broader fallbacks
-    const queries = [
-      flyName + ' incategory:Fly_fishing',
-      flyName + ' fly tying',
-      flyName + ' fly fishing',
-    ];
-    try {
-      for (const q of queries) {
-        const d1 = await fetch(base + '?action=query&list=search&srsearch=' + enc(q) + '&srnamespace=6&srlimit=8&format=json&origin=*').then(r => r.json());
-        const hit = (d1?.query?.search || []).find(r => goodTitle(r.title));
-        if (!hit) continue;
-        const d2 = await fetch(base + '?action=query&titles=' + enc(hit.title) + '&prop=imageinfo&iiprop=url|mime&iiurlwidth=600&format=json&origin=*').then(r => r.json());
-        for (const page of Object.values(d2?.query?.pages || {})) {
-          for (const ii of (page.imageinfo || [])) {
-            if (ii.mime?.startsWith('image/') && !ii.mime.includes('svg')) {
-              const url = ii.thumburl || ii.url;
-              this._photoCache[flyId] = url;
-              if (this.state.activeFlyId === flyId) this.setState({ flyPhotoUrl: url });
-              return;
-            }
-          }
-        }
-      }
-      this._photoCache[flyId] = null;
-    } catch(e) {
-      this._photoCache[flyId] = null;
-    }
-  }
-
   _wikiFlat(){
     const out=[];
     for(const cat of this.WIKI_TREE){ for(const node of cat.nodes) out.push({...node,catId:cat.id,catLabel:cat.label}); }
@@ -1490,16 +1430,7 @@ class Component extends DCLogic {
   persist(saved){ try { localStorage.setItem('flyforge_saved', JSON.stringify(saved)); } catch(e){} }
 
   // ---------- 3D view ----------
-  componentDidUpdate() {
-    this.ensure3D();
-    const st = this.state;
-    if (st.activeFlyId !== this._lastActiveFlyId) {
-      this._lastActiveFlyId = st.activeFlyId;
-      const fly = (st.build && !st.build.custom) ? this.flyById(st.activeFlyId) : null;
-      if (fly) this.fetchFlyPhoto(fly.id, fly.name);
-      else if (st.flyPhotoUrl) this.setState({ flyPhotoUrl: null });
-    }
-  }
+  componentDidUpdate(){ this.ensure3D(); }
   componentWillUnmount(){ this.teardown3D(); if(this._onVw){ window.removeEventListener('resize',this._onVw); this._onVw=null; } }
   setView2d = () => this.setState({ viewMode:'2d' });
   setView3d = () => this.setState({ viewMode:'3d' });
@@ -2149,12 +2080,8 @@ class Component extends DCLogic {
         const def=this.SLOT_DEFS[s.type];
         return { name:L({de:def.de,en:def.en}), detail:this.partDetail(s,false), color: def.hasColor?this.hex(s.color):'#565b61' };
       });
-
-      out.flyPhotoUrl = (!st.build.custom && st.flyPhotoUrl) ? st.flyPhotoUrl : '';
-      out.showFlyPhoto = !st.build.custom && !!st.flyPhotoUrl;
     }
 
-    out.onPhotoError = (e) => { e.currentTarget.parentElement.style.display='none'; };
     return out;
   }
 }
